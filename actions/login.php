@@ -1,5 +1,5 @@
 <?php
-include 'config.php';
+include '../db/config.php';
 
 session_start();
 
@@ -34,47 +34,82 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $errors['password'] = "Password must meet all requirements.";
     }
 
-// If there are no errors, proceed with login
-if (empty($errors)) {
-    // Check if user exists in the database
-    $stmt = $conn->prepare("SELECT user_id, first_name, last_name, password, role FROM users WHERE email = ?");
-    $stmt->bind_param("s", $email);
-    $stmt->execute();
-    $result = $stmt->get_result();
+    // If there are no errors, proceed with login
+    if (empty($errors)) {
+        // Check if user exists in the database
+        $stmt = $conn->prepare("SELECT user_id, first_name, last_name, password, role FROM cancer_users WHERE email = ?");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $result = $stmt->get_result();
 
-    if ($result->num_rows > 0) {
-        $row = $result->fetch_assoc();
-        $hashedPassword = $row['password'];
+        if ($result->num_rows > 0) {
+            $row = $result->fetch_assoc();
+            $hashedPassword = $row['password'];
 
-        // Verify the password
-        if (password_verify($password, $hashedPassword)) {
-            // Set session variables
-            $_SESSION['user_id'] = $row['user_id']; 
-            $_SESSION['first_name'] = $row['first_name'];
-            $_SESSION['last_name'] = $row['last_name'];
-            $_SESSION['role'] = $row['role'];
+            // Verify the password
+            if (password_verify($password, $hashedPassword)) {
+                // Set basic session variables
+                $_SESSION['user_id'] = $row['user_id'];
+                $_SESSION['first_name'] = $row['first_name'];
+                $_SESSION['last_name'] = $row['last_name'];
+                $_SESSION['role'] = $row['role'];
 
-            //echo "Welcome, " . $row['fname'] . " " . $row['lname'] . " (Role: " . $_SESSION['role'] . ")";  // Fixed to display role
+                // Get additional role-specific information
+                if ($row['role'] === 'patient') {
+                    $roleStmt = $conn->prepare("SELECT patient_id, cancer_type_id FROM cancer_patients WHERE user_id = ?");
+                    $roleStmt->bind_param("i", $row['user_id']);
+                    $roleStmt->execute();
+                    $roleResult = $roleStmt->get_result();
+                    if ($roleResult->num_rows > 0) {
+                        $roleData = $roleResult->fetch_assoc();
+                        $_SESSION['patient_id'] = $roleData['patient_id'];
+                        $_SESSION['cancer_type_id'] = $roleData['cancer_type_id'];
+                    }
+                    $roleStmt->close();
+                } elseif ($row['role'] === 'caregiver') {
+                    $roleStmt = $conn->prepare("SELECT caregiver_id, specialization FROM cancer_caregivers WHERE user_id = ?");
+                    $roleStmt->bind_param("i", $row['user_id']);
+                    $roleStmt->execute();
+                    $roleResult = $roleStmt->get_result();
+                    if ($roleResult->num_rows > 0) {
+                        $roleData = $roleResult->fetch_assoc();
+                        $_SESSION['caregiver_id'] = $roleData['caregiver_id'];
+                        $_SESSION['specialization'] = $roleData['specialization'];
+                    }
+                    $roleStmt->close();
+                }
 
-            // Redirect to the appropriate dashboard based on the user role
-            header("Location: dashboard.php");
-            exit();
+                // Redirect based on role
+                switch ($row['role']) {
+                    case 'admin':
+                        header("Location: ../view/admin/dashboard.php");
+                        break;
+                    case 'patient':
+                        header("Location: ../view/admin/dashboard.php");
+                        break;
+                    case 'caregiver':
+                        header("Location: ../view/admin/dashboard.php");
+                        break;
+                    default:
+                    header("Location: ../view/admin/dashboard.php");
+                }
+                exit();
+            } else {
+                $errors['login'] = "Invalid email or password.";
+            }
         } else {
             $errors['login'] = "Invalid email or password.";
         }
-    } else {
-        $errors['login'] = "Invalid email or password.";
-    }
-    $stmt->close();
-}
-
-// If there are errors, send them back to the client
-if (!empty($errors)) {
-    header('Content-Type: application/json');
-    echo json_encode(['errors' => $errors]);
-    exit();
+        $stmt->close();
     }
 
+    // If there are errors, send them back to the client
+    if (!empty($errors)) {
+        header('Content-Type: application/json');
+        echo json_encode(['errors' => $errors]);
+        exit();
+    }
+    
 }
 
 $conn->close();

@@ -1,5 +1,5 @@
 <?php
-include 'config.php';
+include '../db/config.php';
 
 session_start();
 
@@ -48,7 +48,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $errors['email'] = "Invalid email format.";
     } else {
         // Check if email already exists
-        $stmt = $conn->prepare("SELECT * FROM users WHERE email = ?");
+        $stmt = $conn->prepare("SELECT * FROM cancer_users WHERE email = ?");
         $stmt->bind_param("s", $email);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -78,21 +78,33 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // If there are no errors, proceed with registration
     if (empty($errors)) {
-        // Hash the password
-        $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
+        try {
+            $conn->begin_transaction();
 
-        // Prepare the SQL statement
-        $stmt = $conn->prepare("INSERT INTO users (first_name, last_name, email, password, role, created_at, updated_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW())");
-        $role = 2; // Regular user role
-        $stmt->bind_param("ssssi", $fname, $lname, $email, $hashedPassword, $role);
+            // Hash the password
+            $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
 
-        if ($stmt->execute()) {
+            // Insert into cancer_users table with default role as patient
+            $stmt = $conn->prepare("INSERT INTO cancer_users (first_name, last_name, email, password) VALUES (?, ?, ?, ?)");
+            $stmt->bind_param("ssss", $fname, $lname, $email, $hashedPassword);
+            $stmt->execute();
+            
+            $userId = $conn->insert_id;
+            
+            // Create corresponding entry in cancer_patients table
+            $stmt = $conn->prepare("INSERT INTO cancer_patients (user_id) VALUES (?)");
+            $stmt->bind_param("i", $userId);
+            $stmt->execute();
+
+            $conn->commit();
             
             // Registration successful - redirect to login page
-            header("Location: login.html");
+            header("Location: ../view/login.html");
             exit();
-        } else {
-            $errors['database'] = "Registration failed: " . $conn->error;
+            
+        } catch (Exception $e) {
+            $conn->rollback();
+            $errors['database'] = "Registration failed: " . $e->getMessage();
         }
         $stmt->close();
     }

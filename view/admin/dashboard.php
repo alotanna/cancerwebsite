@@ -2,7 +2,7 @@
 // Start the session to access session variables
 session_start();
 
-include 'config.php';
+include '../../db/config.php';
 
 // Session validation
 if (isset($_SESSION['user_id'], $_SESSION['first_name'], $_SESSION['last_name'], $_SESSION['role'])) {
@@ -10,242 +10,232 @@ if (isset($_SESSION['user_id'], $_SESSION['first_name'], $_SESSION['last_name'],
     $first_name = $_SESSION['first_name'];
     $last_name = $_SESSION['last_name'];
     $user_role = $_SESSION['role'];
+
+    // Ensure only admin can access
+    if ($user_role !== 'admin') {
+        header("Location: ../../view/login.html");
+        exit();
+    }
 } else {
-    header("Location: login.html");
+    header("Location: ../../view/login.html");
     exit();
 }
+
+// Prevent caching
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
 
 // Check connection
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-// Super Admin Statistics
-$sql = "SELECT COUNT(*) as total_users FROM Users";
+// Total Users Statistics
+$sql = "SELECT 
+    COUNT(*) as total_users, 
+    SUM(CASE WHEN role = 'patient' THEN 1 ELSE 0 END) as total_patients,
+    SUM(CASE WHEN role = 'caregiver' THEN 1 ELSE 0 END) as total_caregivers
+    FROM cancer_users";
 $result = $conn->query($sql);
-$total_users = $result->fetch_assoc()['total_users'];
+$user_stats = $result->fetch_assoc();
 
-$sql = "SELECT COUNT(*) as total_resources FROM Resources";
-$result = $conn->query($sql);
-$total_resources = $result->fetch_assoc()['total_resources'];
+// Recent Appointments
+$sql = "SELECT 
+    a.appointment_date, 
+    a.appointment_time, 
+    u_patient.first_name as patient_name, 
+    u_caregiver.first_name as caregiver_name 
+    FROM cancer_appointments a
+    JOIN cancer_patients p ON a.patient_id = p.patient_id
+    JOIN cancer_users u_patient ON p.user_id = u_patient.user_id
+    LEFT JOIN cancer_caregivers cg ON a.caregiver_id = cg.caregiver_id
+    LEFT JOIN cancer_users u_caregiver ON cg.user_id = u_caregiver.user_id
+    ORDER BY a.appointment_date DESC, a.appointment_time DESC
+    LIMIT 5";
+$recent_appointments = $conn->query($sql)->fetch_all(MYSQLI_ASSOC);
 
-$sql = "SELECT COUNT(*) as total_events FROM Events WHERE event_date >= CURDATE()";
-$result = $conn->query($sql);
-$upcoming_events = $result->fetch_assoc()['total_events'];
+// Resources Shared
+$sql = "SELECT 
+    r.resource_id,
+    r.title,
+    r.resource_type,
+    u.first_name AS author_name,
+    r.created_at
+    FROM cancer_resources r
+    JOIN cancer_users u ON r.user_id = u.user_id
+    WHERE r.status = 'approved'
+    ORDER BY r.created_at DESC
+    LIMIT 5";
+$recent_resources = $conn->query($sql)->fetch_all(MYSQLI_ASSOC);
 
-// Get monthly user registrations
-$sql = "SELECT DATE_FORMAT(created_at, '%b') AS month, COUNT(*) AS user_count 
-        FROM Users 
-        GROUP BY month 
-        ORDER BY created_at";
-$user_registration_data = $conn->query($sql)->fetch_all(MYSQLI_ASSOC);
+// Recent Stories Shared
+$sql = "SELECT 
+    s.story_id,
+    s.title,
+    u.first_name AS author_name,
+    ct.cancer_type_name,
+    s.created_at
+    FROM cancer_stories s
+    JOIN cancer_patients p ON s.patient_id = p.patient_id
+    JOIN cancer_users u ON p.user_id = u.user_id
+    LEFT JOIN cancer_types ct ON s.cancer_type_id = ct.cancer_type_id
+    WHERE s.status = 'approved'
+    ORDER BY s.created_at DESC
+    LIMIT 5";
+$recent_stories = $conn->query($sql)->fetch_all(MYSQLI_ASSOC);
 
-// Get cancer type distribution
-$sql = "SELECT ct.cancer_type_name, COUNT(u.user_id) as count 
-        FROM Cancer_Types ct 
-        LEFT JOIN Users u ON ct.cancer_type_id = u.cancer_type_id 
-        GROUP BY ct.cancer_type_id";
+// Resources and Stories Statistics
+$sql = "SELECT 
+    (SELECT COUNT(*) FROM cancer_resources WHERE status = 'approved') as total_resources,
+    (SELECT COUNT(*) FROM cancer_stories WHERE status = 'approved') as total_stories";
+$resource_story_stats = $conn->query($sql)->fetch_assoc();
+
+// Cancer Type Distribution
+$sql = "SELECT 
+    ct.cancer_type_name, 
+    COUNT(p.patient_id) as patient_count 
+    FROM cancer_types ct 
+    LEFT JOIN cancer_patients p ON ct.cancer_type_id = p.cancer_type_id 
+    GROUP BY ct.cancer_type_id
+    ORDER BY patient_count DESC";
 $cancer_distribution = $conn->query($sql)->fetch_all(MYSQLI_ASSOC);
-
-// Get upcoming events
-$sql = "SELECT event_title, event_date, location 
-        FROM Events 
-        WHERE event_date >= CURDATE() 
-        ORDER BY event_date 
-        LIMIT 5";
-$upcoming_events_list = $conn->query($sql)->fetch_all(MYSQLI_ASSOC);
-
-// Regular User Statistics
-if ($user_role == 2) {
-    // Get user's appointments
-    $sql = "SELECT a.appointment_date, a.appointment_time, d.first_name as doctor_name, a.location 
-            FROM Appointments a 
-            LEFT JOIN Doctors d ON a.doctor_id = d.doctor_id 
-            WHERE a.user_id = ? AND a.appointment_date >= CURDATE() 
-            ORDER BY a.appointment_date, a.appointment_time 
-            LIMIT 5";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $user_id);
-    $stmt->execute();
-    $upcoming_appointments = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-
-    // Get user's shared resources
-    $sql = "SELECT title, resource_type, created_at 
-            FROM Resources 
-            WHERE cancer_type_id = (SELECT cancer_type_id FROM Users WHERE user_id = ?) 
-            ORDER BY created_at DESC 
-            LIMIT 5";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $user_id);
-    $stmt->execute();
-    $user_resources = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-
-    // Get user's registered events
-    $sql = "SELECT e.event_title, e.event_date, e.location 
-            FROM Events e 
-            JOIN Event_Registrations er ON e.event_id = er.event_id 
-            WHERE er.user_id = ? AND e.event_date >= CURDATE() 
-            ORDER BY e.event_date 
-            LIMIT 5";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $user_id);
-    $stmt->execute();
-    $user_events = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-
-    // Get user's recent payments
-    $sql = "SELECT payment_type, amount, payment_date, payment_status 
-            FROM Payments 
-            WHERE user_id = ? 
-            ORDER BY payment_date DESC 
-            LIMIT 5";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $user_id);
-    $stmt->execute();
-    $recent_payments = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-}
 
 $conn->close();
 ?>
 
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Cancer Support Platform</title>
-    <link href="https://fonts.googleapis.com/css2?family=Alkatra&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/css/dashboard.css">
+    <title>Admin Dashboard - Cancer Support Platform</title>
+    <link rel="stylesheet" href="../../assets/css/dashboard.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-
 <body>
     <div class="dashboard-container">
         <aside class="sidebar">
             <div class="user-profile">
-                <img src="cancer7.jpg" alt="User Avatar" class="user-avatar">
-                <h3><span id="user-name"></span></h3>
+                <img src="../../assets/images/austine.jpeg" alt="Admin Avatar" class="user-avatar">
+                <h3><span id="user-name"><?php echo $first_name . ' ' . $last_name; ?></span></h3>
             </div>
             <nav>
                 <ul>
                     <li><a href="dashboard.php"><i class="fas fa-home"></i> Dashboard</a></li>
-                    <?php if ($_SESSION['role'] == 1) { ?>
-                        <li><a href="users.php"><i class="fas fa-users"></i> User Management</a></li>
-                    <?php } ?>
+                    <li><a href="caregivers.php"><i class="fas fa-user-nurse"></i> Caregivers</a></li>
+                    <li><a href="patients.php"><i class="fas fa-users"></i> Patients & Survivors</a></li>
+                    <li><a href="stories.php"><i class="fas fa-book-open"></i> Stories Shared</a></li>
                     <li><a href="resources.php"><i class="fas fa-book-medical"></i> Resources</a></li>
                     <li><a href="appointments.php"><i class="fas fa-calendar-check"></i> Appointments</a></li>
-                    <li><a href="events.php"><i class="fas fa-calendar-day"></i> Events</a></li>
-                    <li><a href="settings.php"><i class="fas fa-cog"></i> Settings</a></li>
+                    <li><a href="profile.php"><i class="fas fa-user"></i> Profile</a></li>
                     <li><a href="logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
                 </ul>
             </nav>
         </aside>
 
         <main class="main-content">
-            <?php if ($user_role == 1) { ?>
-                <div class="welcome-container">
-                    <h2>Welcome, Super Admin, to the Cancer Support Platform</h2>
+            <div class="welcome-container">
+                <h2>Welcome, Admin, to the Cancer Support Platform</h2>
+            </div>
+
+            <div class="dashboard-layout">
+                <div class="left-column">
+                    <div class="analytics-cards">
+                        <div class="analytics-card">
+                            <h3>Total Users</h3>
+                            <p class="analytics-number"><?php echo $user_stats['total_users']; ?></p>
+                        </div>
+                        <div class="analytics-card">
+                            <h3>Patients</h3>
+                            <p class="analytics-number"><?php echo $user_stats['total_patients']; ?></p>
+                        </div>
+                        <div class="analytics-card">
+                            <h3>Caregivers</h3>
+                            <p class="analytics-number"><?php echo $user_stats['total_caregivers']; ?></p>
+                        </div>
+                    </div>
+
+                    <div class="top-users">
+                        <h3>Recent Appointments</h3>
+                        <ul>
+                            <?php foreach ($recent_appointments as $appointment): ?>
+                                <li>
+                                    <?php echo date('M d, Y', strtotime($appointment['appointment_date'])) . 
+                                            ' at ' . date('h:i A', strtotime($appointment['appointment_time'])) . 
+                                            ' - Patient: ' . $appointment['patient_name'] . 
+                                            ' (Caregiver: ' . ($appointment['caregiver_name'] ?? 'Not Assigned') . ')'; ?>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+
+                    <div class="piechart">
+                        <h3>Patient Cancer Type Distribution</h3>
+                        <canvas id="cancerDistributionChart"></canvas>
+                    </div>
                 </div>
 
-                <div class="dashboard-layout">
-                    <div class="left-column">
-                        <div class="analytics-cards">
-                            <div class="analytics-card">
-                                <h3>Total Users</h3>
-                                <p class="analytics-number"><?php echo $total_users; ?></p>
-                            </div>
-                            <div class="analytics-card">
-                                <h3>Total Resources</h3>
-                                <p class="analytics-number"><?php echo $total_resources; ?></p>
-                            </div>
-                            <div class="analytics-card">
-                                <h3>Upcoming Events</h3>
-                                <p class="analytics-number"><?php echo $upcoming_events; ?></p>
-                            </div>
+                <div class="right-column">
+                    <div class="top-users">
+                        <h3>Resources Shared</h3>
+                        <div class="analytics-card">
+                            <h3>Total Resources</h3>
+                            <p class="analytics-number"><?php echo $resource_story_stats['total_resources']; ?></p>
                         </div>
-                        <div class="top-users">
-                            <h3>Upcoming Events</h3>
-                            <ul>
-                                <?php foreach ($upcoming_events_list as $event) { ?>
-                                    <li><?php echo $event['event_title'] . ' - ' . $event['event_date'] . ' at ' . $event['location']; ?></li>
-                                <?php } ?>
-                            </ul>
-                        </div>
-                        <div class="piechart">
-                            <h3>Cancer Type Distribution</h3>
-                            <canvas id="cancerDistributionChart"></canvas>
-                        </div>
+                        <table class="recent-table">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Type</th>
+                                    <th>Author</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($recent_resources as $resource): ?>
+                                    <tr>
+                                        <td><?php echo htmlspecialchars(substr($resource['title'], 0, 20)) . (strlen($resource['title']) > 20 ? '...' : ''); ?></td>
+                                        <td><?php echo str_replace('_', ' ', ucwords($resource['resource_type'])); ?></td>
+                                        <td><?php echo htmlspecialchars($resource['author_name']); ?></td>
+                                        <td><?php echo date('M d', strtotime($resource['created_at'])); ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
                     </div>
-                    <div class="right-column">
-                        <div class="chart-container">
-                            <h3>Monthly User Registrations</h3>
-                            <canvas id="registrationChart"></canvas>
-                        </div>
-                    </div>
-                </div>
 
-            <?php } else if ($user_role == 2) { ?>
-                <div class="welcome-container">
-                    <h2>Welcome to Your Cancer Support Dashboard</h2>
-                </div>
-
-                <div class="dashboard-layout">
-                    <div class="left-column">
-                        <div class="analytics-cards">
-                            <div class="analytics-card">
-                                <h3>Upcoming Appointments</h3>
-                                <p class="analytics-number"><?php echo count($upcoming_appointments); ?></p>
-                            </div>
+                    <div class="top-users">
+                        <h3>Stories Shared</h3>
+                        <div class="analytics-card">
+                            <h3>Total Stories</h3>
+                            <p class="analytics-number"><?php echo $resource_story_stats['total_stories']; ?></p>
                         </div>
-                        <br>
-                        <div class="top-users">
-                            <h3>Your Next Appointments</h3>
-                            <ul>
-                                <?php foreach ($upcoming_appointments as $appointment) { ?>
-                                    <li>
-                                        <?php echo date('M d, Y', strtotime($appointment['appointment_date'])) . 
-                                                ' at ' . date('h:i A', strtotime($appointment['appointment_time'])) . 
-                                                ' with Dr. ' . $appointment['doctor_name']; ?>
-                                    </li>
-                                <?php } ?>
-                            </ul>
-                        </div>
-                        <br>
-                        <div class="top-users">
-                            <h3>Recent Payments</h3>
-                            <ul>
-                                <?php foreach ($recent_payments as $payment) { ?>
-                                    <li>
-                                        <?php echo $payment['payment_type'] . ' - $' . $payment['amount'] . 
-                                                ' (' . $payment['payment_status'] . ')'; ?>
-                                    </li>
-                                <?php } ?>
-                            </ul>
-                        </div>
-                    </div>
-                    <br>
-                    <div class="right-column">
-                        <div class="top-users">
-                            <h3>Your Registered Events</h3>
-                            <ul>
-                                <?php foreach ($user_events as $event) { ?>
-                                    <li><?php echo $event['event_title'] . ' - ' . $event['event_date']; ?></li>
-                                <?php } ?>
-                            </ul>
-                        </div>
-                        <br>
-                        <div class="top-users">
-                            <h3>Recent Resources Shared</h3>
-                            <ul>
-                                <?php foreach ($user_resources as $resource) { ?>
-                                    <li><?php echo $resource['title'] . ' (' . $resource['resource_type'] . ')'; ?></li>
-                                <?php } ?>
-                            </ul>
-                        </div>
+                        <table class="recent-table">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Cancer Type</th>
+                                    <th>Author</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($recent_stories as $story): ?>
+                                    <tr>
+                                        <td><?php echo htmlspecialchars(substr($story['title'], 0, 20)) . (strlen($story['title']) > 20 ? '...' : ''); ?></td>
+                                        <td><?php echo htmlspecialchars($story['cancer_type_name'] ?? 'Unspecified'); ?></td>
+                                        <td><?php echo htmlspecialchars($story['author_name']); ?></td>
+                                        <td><?php echo date('M d', strtotime($story['created_at'])); ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-            <?php } ?>
+            </div>
 
             <footer>
                 <p>&copy; 2024 Cancer Support Platform. All rights reserved.</p>
@@ -254,49 +244,43 @@ $conn->close();
     </div>
 
     <script>
-        // Set user name
-        document.getElementById('user-name').textContent = '<?php echo $first_name . ' ' . $last_name; ?>';
-
-        // Initialize charts based on role
-        if (<?php echo $user_role; ?> === 1) {
-            // Registration Chart
-            createChart('registrationChart', 'bar', {
-                labels: <?php echo json_encode(array_column($user_registration_data, 'month')); ?>,
-                datasets: [{
-                    label: 'New Users',
-                    data: <?php echo json_encode(array_column($user_registration_data, 'user_count')); ?>,
-                    backgroundColor: '#f3ada5',
-                    borderColor: '#fdca9d',
-                    borderWidth: 1
-                }]
-            });
-
-            // Cancer Distribution Chart
-            createChart('cancerDistributionChart', 'pie', {
-                labels: <?php echo json_encode(array_column($cancer_distribution, 'cancer_type_name')); ?>,
-                datasets: [{
-                    data: <?php echo json_encode(array_column($cancer_distribution, 'count')); ?>,
-                    backgroundColor: ['#fdca9d', '#f3ada5', '#E6E6FA', '#9796b0', '#FF6B6B'],
-                }]
-            });
-        }
-
-        // Utility function to create charts
-        function createChart(elementId, type, data) {
+        // Cancer Distribution Chart
+        function createPieChart(elementId, labels, data) {
             const ctx = document.getElementById(elementId);
-            if (!ctx) return null;
-            
+            if (!ctx) return;
+
             return new Chart(ctx, {
-                type: type,
-                data: data,
+                type: 'pie',
+                data: {
+                    labels: <?php echo json_encode(array_column($cancer_distribution, 'cancer_type_name')); ?>,
+                    datasets: [{
+                        data: <?php echo json_encode(array_column($cancer_distribution, 'patient_count')); ?>,
+                        backgroundColor: [
+                            '#fdca9d', '#f3ada5', '#E6E6FA', 
+                            '#9796b0', '#FF6B6B', '#4CAF50', 
+                            '#2196F3'
+                        ]
+                    }]
+                },
                 options: {
                     responsive: true,
-                    scales: {
-                        y: { beginAtZero: true }
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: 'Patient Cancer Type Distribution'
+                        }
                     }
                 }
             });
         }
+
+        // Create chart on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            createPieChart('cancerDistributionChart');
+        });
     </script>
 </body>
 </html>

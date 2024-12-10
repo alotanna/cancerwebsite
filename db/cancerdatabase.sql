@@ -6,197 +6,120 @@ CREATE DATABASE IF NOT EXISTS cancer_website;
 
 USE cancer_website;
 
--- Create Cancer Types Table (moved to top since it's referenced by Users table)
-CREATE TABLE Cancer_Types (
+-- Create Cancer Types Table
+CREATE TABLE cancer_types (
     cancer_type_id INT AUTO_INCREMENT PRIMARY KEY,
     cancer_type_name VARCHAR(100) NOT NULL UNIQUE
 );
 
--- Create Users Table
-CREATE TABLE Users (
+-- Users Table with ENUM for role
+CREATE TABLE cancer_users (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
-    first_name VARCHAR(100) NOT NULL,
-    last_name VARCHAR(100) NOT NULL,
     email VARCHAR(150) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
-    role INT DEFAULT 3,  -- 1 for Super Admin, 2 for Admin, 3 for Regular User
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
     phone_number VARCHAR(15),
     profile_picture VARCHAR(255),
+    role ENUM('admin', 'caregiver', 'patient') DEFAULT 'patient',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Create Patients Table
+CREATE TABLE cancer_patients (
+    patient_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL UNIQUE,
     date_of_birth DATE,
-    gender VARCHAR(10),
-    location VARCHAR(255),
-    cancer_type_id INT,  -- Changed to reference Cancer_Types table
+    gender ENUM('male', 'female', 'other') NOT NULL,
+    cancer_type_id INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (cancer_type_id) REFERENCES Cancer_Types(cancer_type_id) ON DELETE SET NULL
+    FOREIGN KEY (user_id) REFERENCES cancer_users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (cancer_type_id) REFERENCES cancer_types(cancer_type_id) ON DELETE SET NULL
 );
 
--- Create Caregivers Table (moved up since it's referenced by Appointments)
-CREATE TABLE Caregivers (
+-- Modified Caregivers Table
+CREATE TABLE cancer_caregivers (
     caregiver_id INT AUTO_INCREMENT PRIMARY KEY,
-    first_name VARCHAR(100) NOT NULL,
-    last_name VARCHAR(100) NOT NULL,
-    email VARCHAR(150) NOT NULL UNIQUE,
-    phone_number VARCHAR(15),
+    user_id INT NOT NULL UNIQUE,
     specialization VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES cancer_users(user_id) ON DELETE CASCADE
 );
 
--- Create Doctors Table (moved up since it's referenced by Appointments)
-CREATE TABLE Doctors (
-    doctor_id INT AUTO_INCREMENT PRIMARY KEY,
-    first_name VARCHAR(100) NOT NULL,
-    last_name VARCHAR(100) NOT NULL,
-    email VARCHAR(150) NOT NULL UNIQUE,
-    phone_number VARCHAR(15),
-    specialization VARCHAR(255),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-
--- Create Profiles Table
-CREATE TABLE Profiles (
+-- Modified Profiles Table
+CREATE TABLE cancer_profiles (
     profile_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
+    patient_id INT NOT NULL,
     health_condition VARCHAR(255),
-    treatment_status VARCHAR(255),
+    treatment_status ENUM('initial_diagnosis', 'in_treatment', 'post_treatment', 'remission', 'palliative_care'),
     symptoms TEXT,
     nutritional_plan TEXT,
     medications TEXT,
     emotional_wellbeing TEXT,
     caregiver_info TEXT,
-    immunotherapy_status VARCHAR(255),
+    immunotherapy_status ENUM('not_started', 'ongoing', 'completed', 'discontinued'),
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE
+    FOREIGN KEY (patient_id) REFERENCES cancer_patients(patient_id) ON DELETE CASCADE
 );
 
--- Create Stories Table
-CREATE TABLE Stories (
-    story_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    cancer_type_id INT,  -- Changed to reference Cancer_Types table
-    title VARCHAR(255) NOT NULL,  -- Added NOT NULL constraint
-    content TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
-    FOREIGN KEY (cancer_type_id) REFERENCES Cancer_Types(cancer_type_id) ON DELETE SET NULL
-);
-
--- Create Appointments Table
-CREATE TABLE Appointments (
+-- Modified Appointments Table
+CREATE TABLE cancer_appointments (
     appointment_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
+    patient_id INT NOT NULL,
     caregiver_id INT,
-    doctor_id INT,
-    appointment_date DATE NOT NULL,  -- Added NOT NULL constraint
-    appointment_time TIME NOT NULL,  -- Added NOT NULL constraint
-    location VARCHAR(255),
+    appointment_date DATE NOT NULL,
+    appointment_time TIME NOT NULL,
     notes TEXT,
-    status VARCHAR(20) DEFAULT 'Scheduled' CHECK (status IN ('Scheduled', 'Completed', 'Canceled')),
+    status ENUM('scheduled', 'completed', 'canceled'),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
-    FOREIGN KEY (caregiver_id) REFERENCES Caregivers(caregiver_id) ON DELETE SET NULL,
-    FOREIGN KEY (doctor_id) REFERENCES Doctors(doctor_id) ON DELETE SET NULL
+    FOREIGN KEY (patient_id) REFERENCES cancer_patients(patient_id) ON DELETE CASCADE,
+    FOREIGN KEY (caregiver_id) REFERENCES cancer_caregivers(caregiver_id) ON DELETE SET NULL
 );
 
--- Create Nutrition Table
-CREATE TABLE Nutrition (
-    nutrition_id INT AUTO_INCREMENT PRIMARY KEY,
-    cancer_type_id INT,  -- Changed to reference Cancer_Types table
-    nutrition_title VARCHAR(255) NOT NULL,  -- Added NOT NULL constraint
+-- Modified Stories Table with picture column
+CREATE TABLE cancer_stories (
+    story_id INT AUTO_INCREMENT PRIMARY KEY,
+    patient_id INT NOT NULL,
+    cancer_type_id INT,
+    title VARCHAR(255) NOT NULL,
     content TEXT,
+    picture VARCHAR(255),
+    status ENUM('pending', 'approved', 'rejected'),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (cancer_type_id) REFERENCES Cancer_Types(cancer_type_id) ON DELETE SET NULL
+    FOREIGN KEY (patient_id) REFERENCES cancer_patients(patient_id) ON DELETE CASCADE,
+    FOREIGN KEY (cancer_type_id) REFERENCES cancer_types(cancer_type_id) ON DELETE SET NULL
 );
 
--- Create Resources Table
-CREATE TABLE Resources (
+-- Modified Resources Table with updated types and picture column
+CREATE TABLE cancer_resources (
     resource_id INT AUTO_INCREMENT PRIMARY KEY,
-    title VARCHAR(255) NOT NULL,  -- Added NOT NULL constraint
-    cancer_type_id INT,  -- Changed to reference Cancer_Types table
-    resource_type VARCHAR(50) CHECK (resource_type IN ('article', 'video', 'guide')),
-    content TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (cancer_type_id) REFERENCES Cancer_Types(cancer_type_id) ON DELETE SET NULL
-);
-
--- Create Events Table
-CREATE TABLE Events (
-    event_id INT AUTO_INCREMENT PRIMARY KEY,
-    event_title VARCHAR(255) NOT NULL,  -- Added NOT NULL constraint
-    description TEXT,
-    event_date DATE NOT NULL,  -- Added NOT NULL constraint
-    event_time TIME NOT NULL,  -- Added NOT NULL constraint
-    location VARCHAR(255),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-
--- Create Event Registrations Table
-CREATE TABLE Event_Registrations (
-    registration_id INT AUTO_INCREMENT PRIMARY KEY,
-    event_id INT NOT NULL,
     user_id INT NOT NULL,
-    registration_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    status VARCHAR(20) DEFAULT 'Registered' CHECK (status IN ('Registered', 'Attended', 'Canceled')),
-    FOREIGN KEY (event_id) REFERENCES Events(event_id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE
-);
-
--- Create News/Blog Table
-CREATE TABLE News_Blog (
-    news_id INT AUTO_INCREMENT PRIMARY KEY,
-    author_id INT NOT NULL,
-    title VARCHAR(255) NOT NULL,  -- Added NOT NULL constraint
+    title VARCHAR(255) NOT NULL,
+    cancer_type_id INT,
+    resource_type ENUM('lifestyle', 'knowledge_sharing', 'nutrition', 'mental_health', 'exercise', 'support_groups', 'treatment_tips'),
     content TEXT,
-    published_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    picture VARCHAR(255),
+    status ENUM('pending', 'approved', 'rejected'),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (author_id) REFERENCES Users(user_id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES cancer_users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (cancer_type_id) REFERENCES cancer_types(cancer_type_id) ON DELETE SET NULL
 );
 
--- Create Donations Table
-CREATE TABLE Donations (
-    donation_id INT AUTO_INCREMENT PRIMARY KEY,
-    donor_id INT NOT NULL,
-    amount DECIMAL(10, 2) NOT NULL CHECK (amount > 0),  -- Added positive amount check
-    donation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    campaign_name VARCHAR(255),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (donor_id) REFERENCES Users(user_id) ON DELETE CASCADE
-);
-
--- Create Payments Table (moved up since Donors references it)
-CREATE TABLE Payments (
+-- Modified Payments Table
+CREATE TABLE cancer_payments (
     payment_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
-    payment_type VARCHAR(50) CHECK (payment_type IN ('appointment', 'donation', 'event')),
-    amount DECIMAL(10, 2) NOT NULL CHECK (amount > 0),  -- Added positive amount check
-    payment_status VARCHAR(20) DEFAULT 'Pending' CHECK (payment_status IN ('Pending', 'Completed', 'Failed')),
+    appointment_id INT NOT NULL,
+    amount DECIMAL(10, 2) NOT NULL CHECK (amount > 0),
+    payment_status ENUM('pending', 'completed', 'failed'),
     payment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    transaction_id VARCHAR(255) UNIQUE,  -- Added UNIQUE constraint
-    FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE
-);
-
--- Create Donors Table
-CREATE TABLE Donors (
-    donor_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    amount_donated DECIMAL(10, 2) NOT NULL CHECK (amount_donated >= 0),  -- Added non-negative amount check
-    last_donation_date TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE
-);
-
--- Create FAQs Table
-CREATE TABLE FAQs (
-    faq_id INT AUTO_INCREMENT PRIMARY KEY,
-    question TEXT NOT NULL,  -- Added NOT NULL constraint
-    answer TEXT NOT NULL,   -- Added NOT NULL constraint
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    transaction_id VARCHAR(255) UNIQUE,
+    FOREIGN KEY (user_id) REFERENCES cancer_users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (appointment_id) REFERENCES cancer_appointments(appointment_id) ON DELETE CASCADE
 );

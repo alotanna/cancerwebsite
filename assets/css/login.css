@@ -1,6 +1,6 @@
 :root {
-    --peach: #fdca9d;
-    --soft-pink: #f3ada5;
+    --peach: #db6881;
+    --soft-pink: #e66377;
     --lavender: #E6E6FA;
     --dark-lavender: #9796b0;
     --text-primary: #4A4A4A;
@@ -67,12 +67,6 @@ body {
     color: var(--dark-lavender);
 }
 
-.emergency-btn {
-    background-color: var(--soft-pink);
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-    color: var(--text-primary);
-}
 
 .container {
     display: flex;
@@ -94,12 +88,12 @@ body {
 .welcome-content h1 {
     font-size: 2.5rem;
     margin-bottom: 1rem;
-    color: var(--text-primary);
+    color: var(--white);
 }
 
 .welcome-message {
     font-size: 1.1rem;
-    color: var(--text-secondary);
+    color: var(--white);
     margin-bottom: 2rem;
     line-height: 1.6;
 }
@@ -239,8 +233,8 @@ body {
     background: linear-gradient(135deg, var(--peach) 0%, var(--soft-pink) 100%);
     border: none;
     border-radius: 10px;
-    color: var(--text-primary);
-    font-weight: 600;
+    color: var(--white);
+    font-weight: 800;
     cursor: pointer;
     transition: transform 0.3s ease;
 }
@@ -275,7 +269,6 @@ body {
     text-decoration: none;
 }
 
-/* Additional styles for signup page - append to existing styles.css */
 
 .signup-layout {
     gap: 3rem;
@@ -311,7 +304,7 @@ body {
 
 .benefits-list i {
     font-size: 1.5rem;
-    color: var(--dark-lavender);
+    color: var(--white);
     padding: 0.5rem;
     background: var(--soft-pink);
     border-radius: 50%;
@@ -337,50 +330,6 @@ body {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
 
-.role-selection {
-    margin-bottom: 1.5rem;
-}
-
-.role-selection p {
-    color: var(--text-secondary);
-    margin-bottom: 0.8rem;
-}
-
-.role-options {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
-}
-
-.role-option {
-    cursor: pointer;
-}
-
-.role-option input[type="radio"] {
-    display: none;
-}
-
-.role-box {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 1rem;
-    background: var(--soft-pink);
-    border-radius: 10px;
-    color: var(--text-primary);
-    transition: all 0.3s ease;
-}
-
-.role-box i {
-    font-size: 1.5rem;
-}
-
-.role-option input[type="radio"]:checked + .role-box {
-    background: var(--peach);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
 
 .consent-section {
     margin-bottom: 1.5rem;
@@ -471,8 +420,8 @@ body {
     background: linear-gradient(135deg, var(--peach) 0%, var(--soft-pink) 100%);
     border: none;
     border-radius: 10px;
-    color: var(--text-primary);
-    font-weight: 600;
+    color: var(--white);
+    font-weight: 800;
     cursor: pointer;
     transition: transform 0.3s ease;
 }
