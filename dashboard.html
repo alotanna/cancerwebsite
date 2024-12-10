@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Cancer Support Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Alkatra&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="user-profile">
+                <img src="cancer7.jpg" alt="User Avatar" class="user-avatar">
+                <h3><span id="user-name">John Doe</span></h3>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="dashboard.html"><i class="fas fa-home"></i> Dashboard</a></li>
+                    <li><a href="users.html"><i class="fas fa-users"></i> User Management</a></li>
+                    <li><a href="resources.html"><i class="fas fa-book-medical"></i> Resources</a></li>
+                    <li><a href="appointments.html"><i class="fas fa-calendar-check"></i> Appointments</a></li>
+                    <li><a href="events.html"><i class="fas fa-calendar-day"></i> Events</a></li>
+                    <li><a href="settings.html"><i class="fas fa-cog"></i> Settings</a></li>
+                    <li><a href="logout.html"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <!-- Admin Dashboard -->
+            <div id="admin-dashboard">
+                <div class="welcome-container">
+                    <h2>Welcome, Super Admin, to the Cancer Support Platform</h2>
+                </div>
+
+                <div class="dashboard-layout">
+                    <div class="left-column">
+                        <div class="analytics-cards">
+                            <div class="analytics-card">
+                                <h3>Total Users</h3>
+                                <p class="analytics-number">1,234</p>
+                            </div>
+                            <div class="analytics-card">
+                                <h3>Total Resources</h3>
+                                <p class="analytics-number">567</p>
+                            </div>
+                            <div class="analytics-card">
+                                <h3>Upcoming Events</h3>
+                                <p class="analytics-number">12</p>
+                            </div>
+                        </div>
+                        <div class="top-users">
+                            <h3>Upcoming Events</h3>
+                            <ul>
+                                <li>Support Group Meeting - Dec 15, 2024 at Community Center</li>
+                                <li>Wellness Workshop - Dec 20, 2024 at Medical Center</li>
+                                <li>Fundraising Event - Dec 25, 2024 at City Park</li>
+                                <li>Educational Seminar - Dec 30, 2024 at Conference Hall</li>
+                                <li>Art Therapy Session - Jan 5, 2025 at Wellness Center</li>
+                            </ul>
+                        </div>
+                        <div class="piechart">
+                            <h3>Cancer Type Distribution</h3>
+                            <canvas id="cancerDistributionChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="right-column">
+                        <div class="chart-container">
+                            <h3>Monthly User Registrations</h3>
+                            <canvas id="registrationChart"></canvas>
+                        </div>
+                        <br>
+                        <div class="top-users">
+                            <h3>Recent Payments</h3>
+                            <ul>
+                                <li>Consultation - $150 (Paid)</li>
+                                <li>Lab Tests - $200 (Pending)</li>
+                                <li>Medication - $75 (Paid)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Dashboard -->
+            <div id="user-dashboard" style="display: none;" >
+                <div class="welcome-container">
+                    <h2>Welcome to Your Cancer Support Dashboard</h2>
+                </div>
+
+                <div class="dashboard-layout">
+                    <div class="left-column">
+                        <div class="analytics-cards">
+                            <div class="analytics-card">
+                                <h3>Upcoming Appointments</h3>
+                                <p class="analytics-number">3</p>
+                            </div>
+                        </div>
+                        <div class="top-users">
+                            <h3>Your Next Appointments</h3>
+                            <ul>
+                                <li>Dec 15, 2024 at 10:00 AM with Dr. Smith</li>
+                                <li>Dec 20, 2024 at 2:30 PM with Dr. Johnson</li>
+                                <li>Dec 28, 2024 at 11:15 AM with Dr. Williams</li>
+                            </ul>
+                        </div>
+                        <br>
+                        <div class="top-users">
+                            <h3>Recent Payments</h3>
+                            <ul>
+                                <li>Consultation - $150 (Paid)</li>
+                                <li>Lab Tests - $200 (Pending)</li>
+                                <li>Medication - $75 (Paid)</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <br>
+                    <div class="right-column">
+                        <div class="top-users">
+                            <h3>Your Registered Events</h3>
+                            <ul>
+                                <li>Support Group Meeting - Dec 15, 2024</li>
+                                <li>Wellness Workshop - Dec 20, 2024</li>
+                                <li>Art Therapy Session - Jan 5, 2025</li>
+                            </ul>
+                        </div>
+                        <br>
+                        <div class="top-users">
+                            <h3>Recent Resources Shared</h3>
+                            <ul>
+                                <li>Nutrition Guide (PDF)</li>
+                                <li>Exercise Tips (Video)</li>
+                                <li>Meditation Techniques (Audio)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <footer>
+                <p>&copy; 2024 Cancer Support Platform. All rights reserved.</p>
+            </footer>
+        </main>
+    </div>
+
+    <script>
+        // Sample data for charts
+        const monthlyData = {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            data: [65, 59, 80, 81, 56, 55]
+        };
+
+        const cancerTypeData = {
+            labels: ['Breast', 'Lung', 'Prostate', 'Colorectal', 'Melanoma'],
+            data: [30, 25, 20, 15, 10]
+        };
+
+        // Create charts
+        createChart('registrationChart', 'bar', {
+            labels: monthlyData.labels,
+            datasets: [{
+                label: 'New Users',
+                data: monthlyData.data,
+                backgroundColor: '#f3ada5',
+                borderColor: '#ed9990',
+                borderWidth: 2
+            }]
+        });
+
+        createChart('cancerDistributionChart', 'pie', {
+            labels: cancerTypeData.labels,
+            datasets: [{
+                data: cancerTypeData.data,
+                backgroundColor: ['#fdca9d', '#f3ada5', '#E6E6FA', '#9796b0', '#FF6B6B'],
+            }]
+        });
+
+        // Utility function to create charts
+        function createChart(elementId, type, data) {
+            const ctx = document.getElementById(elementId);
+            if (!ctx) return null;
+            
+            return new Chart(ctx, {
+                type: type,
+                data: data,
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: type === 'bar' ? { beginAtZero: true } : undefined
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
