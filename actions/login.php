@@ -85,13 +85,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         header("Location: ../view/admin/dashboard.php");
                         break;
                     case 'patient':
-                        header("Location: ../view/admin/dashboard.php");
+                        header("Location: ../view/admin/patientdashboard.php");
                         break;
                     case 'caregiver':
-                        header("Location: ../view/admin/dashboard.php");
+                        header("Location: ../view/admin/caregiversdashboard.php");
                         break;
                     default:
-                    header("Location: ../view/admin/dashboard.php");
+                    header("Location: ../view/login.html");
                 }
                 exit();
             } else {
