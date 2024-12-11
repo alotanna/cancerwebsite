@@ -13,11 +13,11 @@ if (isset($_SESSION['user_id'], $_SESSION['first_name'], $_SESSION['last_name'],
 
     // Ensure only admin can access
     if ($user_role !== 'admin') {
-        header("Location: ../../view/login.html");
+        header("Location: ../../view/login.php");
         exit();
     }
 } else {
-    header("Location: ../../view/login.html");
+    header("Location: ../../view/login.php");
     exit();
 }
 
@@ -56,6 +56,7 @@ $sql = "SELECT
 $recent_appointments = $conn->query($sql)->fetch_all(MYSQLI_ASSOC);
 
 // Resources Shared
+//   WHERE r.status = 'approved'
 $sql = "SELECT 
     r.resource_id,
     r.title,
@@ -64,31 +65,31 @@ $sql = "SELECT
     r.created_at
     FROM cancer_resources r
     JOIN cancer_users u ON r.user_id = u.user_id
-    WHERE r.status = 'approved'
+
     ORDER BY r.created_at DESC
     LIMIT 5";
 $recent_resources = $conn->query($sql)->fetch_all(MYSQLI_ASSOC);
 
 // Recent Stories Shared
+//WHERE s.status = 'approved'
 $sql = "SELECT 
     s.story_id,
     s.title,
     u.first_name AS author_name,
-    ct.cancer_type_name,
     s.created_at
     FROM cancer_stories s
     JOIN cancer_patients p ON s.patient_id = p.patient_id
     JOIN cancer_users u ON p.user_id = u.user_id
-    LEFT JOIN cancer_types ct ON s.cancer_type_id = ct.cancer_type_id
-    WHERE s.status = 'approved'
     ORDER BY s.created_at DESC
     LIMIT 5";
 $recent_stories = $conn->query($sql)->fetch_all(MYSQLI_ASSOC);
 
 // Resources and Stories Statistics
+//WHERE status = 'approved'
+//WHERE status = 'approved'
 $sql = "SELECT 
-    (SELECT COUNT(*) FROM cancer_resources WHERE status = 'approved') as total_resources,
-    (SELECT COUNT(*) FROM cancer_stories WHERE status = 'approved') as total_stories";
+    (SELECT COUNT(*) FROM cancer_resources ) as total_resources,
+    (SELECT COUNT(*) FROM cancer_stories ) as total_stories";
 $resource_story_stats = $conn->query($sql)->fetch_assoc();
 
 // Cancer Type Distribution
@@ -125,9 +126,9 @@ $conn->close();
             <nav>
                 <ul>
                     <li><a href="dashboard.php"><i class="fas fa-home"></i> Dashboard</a></li>
-                    <li><a href="caregivers.php"><i class="fas fa-user-nurse"></i> Caregivers</a></li>
-                    <li><a href="patients.php"><i class="fas fa-users"></i> Patients & Survivors</a></li>
-                    <li><a href="stories.php"><i class="fas fa-book-open"></i> Stories Shared</a></li>
+                    <li><a href="../caregivers.php"><i class="fas fa-user-nurse"></i> Caregivers</a></li>
+                    <li><a href="../patients.php"><i class="fas fa-users"></i> Patients & Survivors</a></li>
+                    <li><a href="../stories.php"><i class="fas fa-book-open"></i> Stories Shared</a></li>
                     <li><a href="resources.php"><i class="fas fa-book-medical"></i> Resources</a></li>
                     <li><a href="appointments.php"><i class="fas fa-calendar-check"></i> Appointments</a></li>
                     <li><a href="profile.php"><i class="fas fa-user"></i> Profile</a></li>
@@ -217,7 +218,6 @@ $conn->close();
                             <thead>
                                 <tr>
                                     <th>Title</th>
-                                    <th>Cancer Type</th>
                                     <th>Author</th>
                                     <th>Date</th>
                                 </tr>
@@ -226,7 +226,6 @@ $conn->close();
                                 <?php foreach ($recent_stories as $story): ?>
                                     <tr>
                                         <td><?php echo htmlspecialchars(substr($story['title'], 0, 20)) . (strlen($story['title']) > 20 ? '...' : ''); ?></td>
-                                        <td><?php echo htmlspecialchars($story['cancer_type_name'] ?? 'Unspecified'); ?></td>
                                         <td><?php echo htmlspecialchars($story['author_name']); ?></td>
                                         <td><?php echo date('M d', strtotime($story['created_at'])); ?></td>
                                     </tr>

@@ -1,6 +1,3 @@
--- Drop the database if it exists
-DROP DATABASE IF EXISTS cancer_website;
-
 -- Create the database
 CREATE DATABASE IF NOT EXISTS cancer_website;
 
@@ -26,20 +23,31 @@ CREATE TABLE cancer_users (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Create Patients Table
+-- Create Combined Patients Table with Comprehensive Information
 CREATE TABLE cancer_patients (
     patient_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL UNIQUE,
     date_of_birth DATE,
     gender ENUM('male', 'female', 'other') NOT NULL,
     cancer_type_id INT,
+    
+    health_condition VARCHAR(255),
+    treatment_status ENUM('initial_diagnosis', 'in_treatment', 'post_treatment', 'remission', 'palliative_care'),
+    symptoms TEXT,
+    nutritional_plan TEXT,
+    medications TEXT,
+    emotional_wellbeing TEXT,
+    caregiver_info TEXT,
+    immunotherapy_status ENUM('not_started', 'ongoing', 'completed', 'discontinued'),
+    
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
     FOREIGN KEY (user_id) REFERENCES cancer_users(user_id) ON DELETE CASCADE,
     FOREIGN KEY (cancer_type_id) REFERENCES cancer_types(cancer_type_id) ON DELETE SET NULL
 );
 
--- Modified Caregivers Table
+-- Caregivers Table
 CREATE TABLE cancer_caregivers (
     caregiver_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL UNIQUE,
@@ -49,23 +57,7 @@ CREATE TABLE cancer_caregivers (
     FOREIGN KEY (user_id) REFERENCES cancer_users(user_id) ON DELETE CASCADE
 );
 
--- Modified Profiles Table
-CREATE TABLE cancer_profiles (
-    profile_id INT AUTO_INCREMENT PRIMARY KEY,
-    patient_id INT NOT NULL,
-    health_condition VARCHAR(255),
-    treatment_status ENUM('initial_diagnosis', 'in_treatment', 'post_treatment', 'remission', 'palliative_care'),
-    symptoms TEXT,
-    nutritional_plan TEXT,
-    medications TEXT,
-    emotional_wellbeing TEXT,
-    caregiver_info TEXT,
-    immunotherapy_status ENUM('not_started', 'ongoing', 'completed', 'discontinued'),
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (patient_id) REFERENCES cancer_patients(patient_id) ON DELETE CASCADE
-);
-
--- Modified Appointments Table
+-- Appointments Table
 CREATE TABLE cancer_appointments (
     appointment_id INT AUTO_INCREMENT PRIMARY KEY,
     patient_id INT NOT NULL,
@@ -80,22 +72,20 @@ CREATE TABLE cancer_appointments (
     FOREIGN KEY (caregiver_id) REFERENCES cancer_caregivers(caregiver_id) ON DELETE SET NULL
 );
 
--- Modified Stories Table with picture column
+-- Stories Table
 CREATE TABLE cancer_stories (
     story_id INT AUTO_INCREMENT PRIMARY KEY,
     patient_id INT NOT NULL,
-    cancer_type_id INT,
     title VARCHAR(255) NOT NULL,
     content TEXT,
     picture VARCHAR(255),
     status ENUM('pending', 'approved', 'rejected'),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (patient_id) REFERENCES cancer_patients(patient_id) ON DELETE CASCADE,
-    FOREIGN KEY (cancer_type_id) REFERENCES cancer_types(cancer_type_id) ON DELETE SET NULL
+    FOREIGN KEY (patient_id) REFERENCES cancer_patients(patient_id) ON DELETE CASCADE
 );
 
--- Modified Resources Table with updated types and picture column
+-- Resources Table
 CREATE TABLE cancer_resources (
     resource_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
@@ -111,7 +101,7 @@ CREATE TABLE cancer_resources (
     FOREIGN KEY (cancer_type_id) REFERENCES cancer_types(cancer_type_id) ON DELETE SET NULL
 );
 
--- Modified Payments Table
+-- Payments Table
 CREATE TABLE cancer_payments (
     payment_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
