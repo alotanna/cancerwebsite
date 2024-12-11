@@ -65,7 +65,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         // Generate unique filename
-        $filename =  basename($_FILES['picture']['name']);
+        $timestamp = time();
+        $filename = $timestamp . '_' . basename($_FILES['picture']['name']);
         $target_path = $upload_dir . $filename;
         
         // Move uploaded file

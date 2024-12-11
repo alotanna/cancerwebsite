@@ -13,7 +13,7 @@ if (isset($_SESSION['user_id'], $_SESSION['first_name'], $_SESSION['last_name'],
 
     // Ensure only patients can access
     if ($user_role !== 'patient') {
-        header("Location: ../../view/login.php");
+        header("Location: ../view/login.php");
         exit();
     }
 
@@ -29,7 +29,7 @@ if (isset($_SESSION['user_id'], $_SESSION['first_name'], $_SESSION['last_name'],
     $patient_details = $patient_result->fetch_assoc();
     $patient_id = $patient_details['patient_id'];
 } else {
-    header("Location: ../../view/login.html");
+    header("Location: ../view/login.html");
     exit();
 }
 
@@ -122,10 +122,10 @@ $conn->close();
             </div>
             <nav>
                 <ul>
-                    <li><a href="dashboard.php" class="active"><i class="fas fa-home"></i> Dashboard</a></li>
-                    <li><a href="appointments.php"><i class="fas fa-calendar-check"></i> My Appointments</a></li>
-                    <li><a href="stories.php"><i class="fas fa-book-open"></i> Share My Story</a></li>
-                    <li><a href="share-resource.php"><i class="fas fa-book-medical"></i> Share Resources</a></li>
+                    <li><a href="patientdashboard.php" class="active"><i class="fas fa-home"></i> Dashboard</a></li>
+                    <li><a href="../appointments.php"><i class="fas fa-calendar-check"></i> My Appointments</a></li>
+                    <li><a href="../stories.php"><i class="fas fa-book-open"></i> Share My Story</a></li>
+                    <li><a href="../resources.php"><i class="fas fa-book-medical"></i> Share Resources</a></li>
                     <li><a href="profile.php"><i class="fas fa-user"></i> My Profile</a></li>
                     <li><a href="../../actions/logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
                 </ul>

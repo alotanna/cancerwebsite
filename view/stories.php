@@ -13,11 +13,11 @@ if (isset($_SESSION['user_id'], $_SESSION['first_name'], $_SESSION['last_name'],
 
     // Ensure only admin and patient can access
     if ($user_role !== 'admin' && $user_role !== 'patient') {
-        header("Location: ../view/login.php");
+        header("Location: login.php");
         exit();
     }
 } else {
-    header("Location: ../view/login.php");
+    header("Location: login.php");
     exit();
 }
 
@@ -64,15 +64,18 @@ $cancer_types = $cancer_types_result->fetch_all(MYSQLI_ASSOC);
     <div class="dashboard-container">
         <aside class="sidebar">
             <div class="user-profile">
-                <img src="../../assets/images/austine.jpeg" alt="User Avatar" class="user-avatar">
+                <img src="../assets/images/austine.jpeg" alt="User Avatar" class="user-avatar">
                 <h3><span id="user-name"><?php echo $first_name . ' ' . $last_name; ?></span></h3>
             </div>
             <nav>
                 <ul>
-                    <li><a href="admin/dashboard.php"><i class="fas fa-home"></i> Dashboard</a></li>
                     <?php if ($user_role === 'admin'): ?>
+                        <li><a href="admin/dashboard.php"><i class="fas fa-home"></i> Dashboard</a></li>
                         <li><a href="caregivers.php"><i class="fas fa-user-nurse"></i> Caregivers</a></li>
                         <li><a href="patients.php"><i class="fas fa-users"></i> Patients & Survivors</a></li>
+                    <?php endif; ?>
+                    <?php if ($user_role === 'patient'): ?>
+                        <li><a href="admin/patientdashboard.php"><i class="fas fa-home"></i> Dashboard</a></li>
                     <?php endif; ?>
                     <li><a href="stories.php" class="active"><i class="fas fa-book-open"></i> Stories Shared</a></li>
                     <li><a href="resources.php"><i class="fas fa-book-medical"></i> Resources</a></li>

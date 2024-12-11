@@ -65,7 +65,7 @@ CREATE TABLE cancer_appointments (
     appointment_date DATE NOT NULL,
     appointment_time TIME NOT NULL,
     notes TEXT,
-    status ENUM('scheduled', 'completed', 'canceled'),
+    status ENUM('scheduled', 'completed', 'canceled', 'pending'),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (patient_id) REFERENCES cancer_patients(patient_id) ON DELETE CASCADE,
