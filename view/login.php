@@ -15,11 +15,11 @@
                 <span>HEALING<i class='bx bxs-heart-circle'></i>CELLS</span>
             </div>
             <div class="nav-links">
-                <a href="../index.html">Home</a>
+                <a href="../index.php">Home</a>
                 <a href="resources.html">Resources</a>
                 <a href="community.html">Community</a>
                 <a href="support.html">Support</a>
-                <a href="signup.html">Join Us</a>
+                <a href="signup.php">Join Us</a>
             </div>
         </nav> 
     </header>
@@ -88,7 +88,7 @@
 
                     <div class="register-prompt">
                         <p>New to our community?</p>
-                        <a href="signup.html" class="register-link">Join Us</a>
+                        <a href="signup.php" class="register-link">Join Us</a>
                     </div>
 
                 <div class="help-section">

@@ -99,7 +99,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $conn->commit();
             
             // Registration successful - redirect to login page
-            header("Location: ../view/login.html");
+            header("Location: ../view/login.php");
             exit();
             
         } catch (Exception $e) {

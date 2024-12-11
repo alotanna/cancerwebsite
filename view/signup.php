@@ -15,11 +15,11 @@
                 <span>HEALING<i class='bx bxs-heart-circle'></i>CELLS</span>
             </div>
             <div class="nav-links">
-                <a href="../index.html">Home</a>
+                <a href="../index.php">Home</a>
                 <a href="resources.html">Resources</a>
                 <a href="community.html">Community</a>
                 <a href="support.html">Support</a>
-                <a href="login.html">Login</a>
+                <a href="login.php">Login</a>
             </div>
         </nav>
     </header>
@@ -140,7 +140,7 @@
                     <br>
                     <br>
                     <div class="login-prompt">
-                        <p>Already have an account? <a href="login.html" class="login-link">Sign In</a></p>
+                        <p>Already have an account? <a href="login.php" class="login-link">Sign In</a></p>
                     </div>
                 </form>
 

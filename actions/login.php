@@ -91,7 +91,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         header("Location: ../view/admin/caregiversdashboard.php");
                         break;
                     default:
-                    header("Location: ../view/login.html");
+                    header("Location: ../view/login.php");
                 }
                 exit();
             } else {
