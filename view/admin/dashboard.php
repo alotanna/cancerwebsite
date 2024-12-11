@@ -131,7 +131,7 @@ $conn->close();
                     <li><a href="../stories.php"><i class="fas fa-book-open"></i> Stories Shared</a></li>
                     <li><a href="../resources.php"><i class="fas fa-book-medical"></i> Resources</a></li>
                     <li><a href="../appointments.php"><i class="fas fa-calendar-check"></i> Appointments</a></li>
-                    <li><a href="profile.php"><i class="fas fa-user"></i> Profile</a></li>
+                    <li><a href="../profile.php"><i class="fas fa-user"></i> Profile</a></li>
                     <li><a href="../../actions/logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
                 </ul>
             </nav>
