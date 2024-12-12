@@ -16,8 +16,8 @@
             </div>
             <div class="nav-links">
                 <a href="../index.php">Home</a>
-                <a href="indexresources.html">Resources</a>
-                <a href="ndexstories.html">Stories</a>
+                <a href="indexresources.php">Resources</a>
+                <a href="indexstories.php">Stories</a>
                 <a href="signup.php">Join Us</a>
             </div>
         </nav> 

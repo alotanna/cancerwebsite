@@ -1,5 +1,5 @@
 <?php 
-include 'db/config.php';
+include '../db/config.php';
 
 // Prepare the query for approved resources
 $query = "SELECT cr.resource_id, cr.title, cr.content, cr.picture, cr.resource_type,
@@ -40,7 +40,7 @@ $conn->close();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cancer Resources - HealingCells</title>
-    <link rel="stylesheet" href="assets/css/index.css">
+    <link rel="stylesheet" href="../assets/css/index.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <style>
         /* Modal Styles */
@@ -159,14 +159,14 @@ $conn->close();
             </div>
             <nav>
                 <div class="nav-links">
-                    <a href="index.php">Home</a>
+                    <a href="../index.php">Home</a>
                     <a href="indexresources.php">Resources</a>
                     <a href="indexstories.php">Stories</a>
                     <a href="login.php">Support</a>
                 </div>
                 <div class="nav-auth">
-                    <a href="view/login.php">Login</a>
-                    <a href="view/signup.php">Join Us</a>
+                    <a href="login.php">Login</a>
+                    <a href="signup.php">Join Us</a>
                 </div>
             </nav>
         </div>
@@ -179,7 +179,7 @@ $conn->close();
             <div class="resources-grid">
                 <?php foreach($resources as $resource): ?>
                 <div class="resource-card">
-                    <img src="<?= htmlspecialchars(str_replace('../', '', $resource['picture'])) ?? 'assets/images/default-resource.jpg' ?>" 
+                    <img src="<?= htmlspecialchars( $resource['picture']) ?? '../assets/images/defaultresource.jpg' ?>" 
                          alt="<?= htmlspecialchars($resource['title']) ?>">
                     <div class="resource-content">
                         <span class="resource-type"><?= htmlspecialchars(str_replace('_', ' ', ucfirst($resource['resource_type']))) ?></span>

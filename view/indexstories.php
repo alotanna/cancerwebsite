@@ -1,5 +1,5 @@
 <?php 
-include 'db/config.php';
+include '../db/config.php';
 
 
 // Prepare the query
@@ -41,7 +41,7 @@ $conn->close();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Survivor Stories - HealingCells</title>
-    <link rel="stylesheet" href="assets/css/index.css">
+    <link rel="stylesheet" href="../assets/css/index.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <style>
         /* Modal Styles */
@@ -150,14 +150,14 @@ $conn->close();
             </div>
             <nav>
                 <div class="nav-links">
-                    <a href="index.php">Home</a>
+                    <a href="../index.php">Home</a>
                     <a href="indexresources.php">Resources</a>
                     <a href="indexstories.php">Stories</a>
                     <a href="login.php">Support</a>
                 </div>
                 <div class="nav-auth">
-                    <a href="view/login.php">Login</a>
-                    <a href="view/signup.php">Join Us</a>
+                    <a href="login.php">Login</a>
+                    <a href="signup.php">Join Us</a>
                 </div>
             </nav>
         </div>
@@ -170,7 +170,7 @@ $conn->close();
             <div class="stories-grid">
                 <?php foreach($stories as $story): ?>
                 <div class="story-card">
-                <img src="<?= htmlspecialchars(str_replace('../', '', $story['picture'])) ?? 'assets/images/default-story.jpg' ?>" alt="<?= htmlspecialchars($story['title']) ?>">
+                <img src="<?= htmlspecialchars( $story['picture']) ?? '../assets/images/defaultstory.jpg' ?>" alt="<?= htmlspecialchars($story['title']) ?>">
                     <div class="story-content">
                         <h3><?= htmlspecialchars($story['title']) ?></h3>
                         <p><?= substr(strip_tags($story['content']), 0, 150) ?>...</p>
