@@ -32,7 +32,7 @@ if (isset($_GET['story_id'])) {
             <div class="story-header">
                 <div class="author-profile">
                     <div class="profile-picture-container">
-                        <img src="<?= htmlspecialchars(str_replace('../', '', $story['picture'])) ?? 'assets/images/default-story.jpg' ?>" 
+                        <img src="<?= htmlspecialchars( $story['picture']) ?? '../assets/images/default-story.jpg' ?>" 
                              alt="<?= htmlspecialchars($story['title']) ?>" 
                              class="profile-picture">
                     </div>

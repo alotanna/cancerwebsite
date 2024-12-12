@@ -250,7 +250,7 @@ $conn->close();
                 e.preventDefault();
                 const storyId = this.getAttribute('data-story-id');
 
-                fetch(`functions/get_story_details.php?story_id=${storyId}`)
+                fetch(`../functions/get_story_details.php?story_id=${storyId}`)
                     .then(response => response.text())
                     .then(data => {
                         modalContent.innerHTML = data;

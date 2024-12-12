@@ -261,7 +261,7 @@ $conn->close();
                 e.preventDefault();
                 const resourceId = this.getAttribute('data-resource-id');
 
-                fetch(`functions/get_resource_details.php?resource_id=${resourceId}`)
+                fetch(`../functions/get_resource_details.php?resource_id=${resourceId}`)
                     .then(response => response.text())
                     .then(data => {
                         modalContent.innerHTML = data;

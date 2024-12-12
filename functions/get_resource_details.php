@@ -32,7 +32,7 @@ if (isset($_GET['resource_id'])) {
             <div class="resource-header">
                 <div class="resource-info">
                     <div class="resource-image">
-                        <img src="<?= htmlspecialchars(str_replace('../', '', $resource['picture'])) ?? 'assets/images/default-resource.jpg' ?>" 
+                        <img src="<?= htmlspecialchars($resource['picture']) ?? '../assets/images/default-resource.jpg' ?>" 
                              alt="<?= htmlspecialchars($resource['title']) ?>" 
                              class="resource-main-image">
                     </div>
