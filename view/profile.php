@@ -5,69 +5,215 @@ session_start();
 include '../db/config.php';
 
 // Session validation
-if (isset($_SESSION['user_id'], $_SESSION['first_name'], $_SESSION['last_name'], $_SESSION['role'])) {
-    $user_id = $_SESSION['user_id'];
-    $first_name = $_SESSION['first_name'];
-    $last_name = $_SESSION['last_name'];
-    $user_role = $_SESSION['role'];
-
-    // Ensure only admin can access
-    if ($user_role !== 'admin') {
-        header("Location: ../view/login.php");
-        exit();
-    }
-} else {
+if (!isset($_SESSION['user_id'], $_SESSION['first_name'], $_SESSION['last_name'], $_SESSION['role'])) {
     header("Location: ../view/login.php");
     exit();
 }
 
-// Fetch full user details
-$sql = "SELECT * FROM cancer_users WHERE user_id = ?";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$result = $stmt->get_result();
-$user_details = $result->fetch_assoc();
+$user_id = $_SESSION['user_id'];
+$first_name = $_SESSION['first_name'];
+$last_name = $_SESSION['last_name'];
+$user_role = $_SESSION['role'];
+
+// Fetch user details based on role
+$profile_data = null;
+switch ($user_role) {
+    case 'admin':
+        // For admin, only fetch from users table
+        $sql = "SELECT * FROM cancer_users WHERE user_id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        $profile_data = $stmt->get_result()->fetch_assoc();
+        break;
+
+    case 'patient':
+        // For patient, fetch from both users and patients tables
+        $sql = "SELECT cu.*, cp.* 
+                FROM cancer_users cu
+                JOIN cancer_patients cp ON cu.user_id = cp.user_id
+                WHERE cu.user_id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        $profile_data = $stmt->get_result()->fetch_assoc();
+        
+        // Fetch cancer type if exists
+        if ($profile_data['cancer_type_id']) {
+            $cancer_type_sql = "SELECT cancer_type_name FROM cancer_types WHERE cancer_type_id = ?";
+            $cancer_stmt = $conn->prepare($cancer_type_sql);
+            $cancer_stmt->bind_param("i", $profile_data['cancer_type_id']);
+            $cancer_stmt->execute();
+            $cancer_result = $cancer_stmt->get_result()->fetch_assoc();
+            $profile_data['cancer_type_name'] = $cancer_result['cancer_type_name'] ?? 'Not Specified';
+        }
+        break;
+
+    case 'caregiver':
+        // For caregiver, fetch from both users and caregivers tables
+        $sql = "SELECT cu.*, cc.* 
+                FROM cancer_users cu
+                JOIN cancer_caregivers cc ON cu.user_id = cc.user_id
+                WHERE cu.user_id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        $profile_data = $stmt->get_result()->fetch_assoc();
+        break;
+}
 
 // Handle profile update
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // Sanitize and validate input
-    $new_first_name = htmlspecialchars(trim($_POST['first_name']));
-    $new_last_name = htmlspecialchars(trim($_POST['last_name']));
-    $new_email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
-    $new_phone = htmlspecialchars(trim($_POST['phone']));
-
-    // Prepare update statement
-    $update_sql = "UPDATE cancer_users SET 
-        first_name = ?, 
-        last_name = ?, 
-        email = ?, 
-        phone_number = ? 
-        WHERE user_id = ?";
-    $update_stmt = $conn->prepare($update_sql);
-    $update_stmt->bind_param("ssssi", 
-        $new_first_name, 
-        $new_last_name, 
-        $new_email, 
-        $new_phone, 
-        $user_id
-    );
-
-    if ($update_stmt->execute()) {
-        // Update session variables
-        $_SESSION['first_name'] = $new_first_name;
-        $_SESSION['last_name'] = $new_last_name;
+ 
+    $picture_path = $profile_data['profile_picture'] ?? '';
+    
+    if (!empty($_FILES['profile_picture']['name'])) {
+        $upload_dir = '../uploads/profile_pictures/';
+        $allowed_types = ['image/jpeg', 'image/png', 'image/gif'];
         
-        $success_message = "Profile updated successfully!";
-    } else {
-        $error_message = "Error updating profile. Please try again.";
+        // Create upload directory if it doesn't exist
+        if (!file_exists($upload_dir)) {
+            mkdir($upload_dir, 0755, true);
+        }
+
+        $file_type = $_FILES['profile_picture']['type'];
+        $file_size = $_FILES['profile_picture']['size'];
+        
+        // Validate file
+        if (!in_array($file_type, $allowed_types)) {
+            $_SESSION['message'] = "Invalid file type. Only JPEG, PNG, and GIF are allowed.";
+            $_SESSION['message_type'] = "error";
+            header("Location: profile.php");
+            exit();
+        }
+
+        if ($file_size > 5 * 1024 * 1024) { // 5MB limit
+            $_SESSION['message'] = "File size must be less than 5MB";
+            $_SESSION['message_type'] = "error";
+            header("Location: profile.php");
+            exit();
+        }
+
+        // Generate unique filename
+        $filename = uniqid() . '_' . basename($_FILES['profile_picture']['name']);
+        $target_path = $upload_dir . $filename;
+
+        // Delete old picture if exists and new picture is uploaded
+        if (!empty($picture_path) && file_exists($picture_path)) {
+            unlink($picture_path);
+        }
+
+        // Move uploaded file
+        if (move_uploaded_file($_FILES['profile_picture']['tmp_name'], $target_path)) {
+            $picture_path = $target_path;
+            
+            // Update profile picture in database
+            $update_pic_sql = "UPDATE cancer_users SET profile_picture = ? WHERE user_id = ?";
+            $update_stmt = $conn->prepare($update_pic_sql);
+            $update_stmt->bind_param("si", $picture_path, $user_id);
+            $update_stmt->execute();
+        } else {
+            $_SESSION['message'] = "Failed to upload image";
+            $_SESSION['message_type'] = "error";
+            header("Location: profile.php");
+            exit();
+        }
     }
 
-    $update_stmt->close();
-}
+    // Update other profile details based on role
+    switch ($user_role) {
+        case 'admin':
+            $sql = "UPDATE cancer_users SET 
+                    first_name = ?, 
+                    last_name = ?, 
+                    phone_number = ? 
+                    WHERE user_id = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("sssi", 
+                $_POST['first_name'], 
+                $_POST['last_name'], 
+                $_POST['phone_number'], 
+                $user_id
+            );
+            break;
 
-$stmt->close();
-$conn->close();
+        case 'patient':
+            // Update users table
+            $user_update_sql = "UPDATE cancer_users SET 
+                    first_name = ?, 
+                    last_name = ?, 
+                    phone_number = ? 
+                    WHERE user_id = ?";
+            $user_stmt = $conn->prepare($user_update_sql);
+            $user_stmt->bind_param("sssi", 
+                $_POST['first_name'], 
+                $_POST['last_name'], 
+                $_POST['phone_number'], 
+                $user_id
+            );
+            $user_stmt->execute();
+
+            // Update patients table
+            $sql = "UPDATE cancer_patients SET 
+                    date_of_birth = ?, 
+                    gender = ?, 
+                    health_condition = ?, 
+                    symptoms = ?, 
+                    nutritional_plan = ?, 
+                    emotional_wellbeing = ?
+                    WHERE user_id = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("ssssssi", 
+                $_POST['date_of_birth'], 
+                $_POST['gender'], 
+                $_POST['health_condition'], 
+                $_POST['symptoms'], 
+                $_POST['nutritional_plan'], 
+                $_POST['emotional_wellbeing'], 
+                $user_id
+            );
+            break;
+
+        case 'caregiver':
+            // Update users table
+            $user_update_sql = "UPDATE cancer_users SET 
+                    first_name = ?, 
+                    last_name = ?, 
+                    phone_number = ? 
+                    WHERE user_id = ?";
+            $user_stmt = $conn->prepare($user_update_sql);
+            $user_stmt->bind_param("sssi", 
+                $_POST['first_name'], 
+                $_POST['last_name'], 
+                $_POST['phone_number'], 
+                $user_id
+            );
+            $user_stmt->execute();
+
+            // Update caregivers table
+            $sql = "UPDATE cancer_caregivers SET 
+                    specialization = ?
+                    WHERE user_id = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("si", 
+                $_POST['specialization'], 
+                $user_id
+            );
+            break;
+    }
+
+    // Execute the main update
+    if ($stmt->execute()) {
+        $_SESSION['message'] = "Profile updated successfully!";
+        $_SESSION['message_type'] = "success";
+    } else {
+        $_SESSION['message'] = "Failed to update profile.";
+        $_SESSION['message_type'] = "error";
+    }
+
+    header("Location: profile.php");
+    exit();
+}
 ?>
 
 <!DOCTYPE html>
@@ -75,185 +221,138 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Profile - Cancer Support Platform</title>
+    <title>Profile - Cancer Support Platform</title>
     <link rel="stylesheet" href="../assets/css/dashboard.css">
+    <link rel="stylesheet" href="../assets/css/profile.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        .profile-container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: var(--card-bg);
-            border-radius: 15px;
-            box-shadow: var(--shadow-elevated);
-            padding: 2rem;
-        }
-
-        .profile-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 2rem;
-            background: var(--gradient-secondary);
-            color: white;
-            padding: 1.5rem;
-            border-radius: 10px;
-        }
-
-        .profile-avatar {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            border: 4px solid white;
-            margin-right: 2rem;
-            object-fit: cover;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-
-        .profile-form {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-        }
-
-        .profile-form .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .profile-form label {
-            margin-bottom: 0.5rem;
-            color: var(--text-secondary);
-            font-weight: 600;
-        }
-
-        .profile-form input {
-            padding: 0.75rem;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-        }
-
-        .profile-form input:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(199, 75, 102, 0.1);
-        }
-
-        .full-width {
-            grid-column: span 2;
-        }
-
-        .submit-btn {
-            background: var(--gradient-primary);
-            color: white;
-            border: none;
-            padding: 1rem;
-            border-radius: 10px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .submit-btn:hover {
-            transform: translateY(-5px);
-            box-shadow: var(--shadow-elevated);
-        }
-
-        .alert {
-            grid-column: span 2;
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-        }
-
-        .alert-success {
-            background-color: #dff0d8;
-            color: #3c763d;
-            border: 1px solid #d6e9c6;
-        }
-
-        .alert-error {
-            background-color: #f2dede;
-            color: #a94442;
-            border: 1px solid #ebccd1;
-        }
-    </style>
 </head>
 <body>
     <div class="dashboard-container">
         <aside class="sidebar">
             <div class="user-profile">
-                <img src="../../assets/images/austine.jpeg" alt="Admin Avatar" class="user-avatar">
+                <img src="<?php echo !empty($profile_data['profile_picture']) ? $profile_data['profile_picture'] : '../assets/images/defaultuser.jpg'; ?>" alt="User Avatar" class="user-avatar">
                 <h3><span id="user-name"><?php echo $first_name . ' ' . $last_name; ?></span></h3>
             </div>
             <nav>
                 <ul>
-                    <li><a href="dashboard.php"><i class="fas fa-home"></i> Dashboard</a></li>
-                    <li><a href="../caregivers.php"><i class="fas fa-user-nurse"></i> Caregivers</a></li>
-                    <li><a href="../patients.php"><i class="fas fa-users"></i> Patients & Survivors</a></li>
-                    <li><a href="../stories.php"><i class="fas fa-book-open"></i> Stories Shared</a></li>
-                    <li><a href="../resources.php"><i class="fas fa-book-medical"></i> Resources</a></li>
-                    <li><a href="../appointments.php"><i class="fas fa-calendar-check"></i> Appointments</a></li>
+                    <?php if ($user_role === 'admin'): ?>
+                        <li><a href="admin/dashboard.php"><i class="fas fa-home"></i> Dashboard</a></li>
+                        <li><a href="caregivers.php"><i class="fas fa-user-nurse"></i> Caregivers</a></li>
+                        <li><a href="patients.php"><i class="fas fa-users"></i> Patients & Survivors</a></li>
+                    <?php endif; ?>
+                    <?php if ($user_role === 'patient'): ?>
+                        <li><a href="admin/patientdashboard.php"><i class="fas fa-home"></i> Dashboard</a></li>
+                    <?php endif; ?>
+                    <?php if ($user_role === 'caregiver'): ?>
+                        <li><a href="admin/caregiversdashboard.php"><i class="fas fa-home"></i> Dashboard</a></li>
+                    <?php endif; ?>
+                    <?php if ($user_role !== 'caregiver'): ?>
+                        <li><a href="stories.php"><i class="fas fa-book-open"></i> Stories</a></li>
+                    <?php endif; ?>
+                    <li><a href="resources.php"><i class="fas fa-book-medical"></i> Resources</a></li>
+                    <li><a href="appointments.php"><i class="fas fa-calendar-check"></i> Appointments</a></li>
                     <li><a href="profile.php" class="active"><i class="fas fa-user"></i> Profile</a></li>
-                    <li><a href="../../actions/logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                    <li><a href="../actions/logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
                 </ul>
             </nav>
         </aside>
 
         <main class="main-content">
             <div class="profile-container">
-                <div class="profile-header">
-                    <img src="../../assets/images/austine.jpeg" alt="Admin Avatar" class="profile-avatar">
-                    <div>
-                        <h2>Admin Profile</h2>
-                        <p>Manage your account information</p>
+                <h2>My Profile</h2>
+                
+                <?php 
+                // Display any session messages
+                if (isset($_SESSION['message'])): ?>
+                    <div class="alert alert-<?php echo $_SESSION['message_type']; ?>">
+                        <?php 
+                        echo $_SESSION['message']; 
+                        unset($_SESSION['message']);
+                        unset($_SESSION['message_type']);
+                        ?>
                     </div>
-                </div>
-
-                <?php if (isset($success_message)): ?>
-                    <div class="alert alert-success"><?php echo $success_message; ?></div>
                 <?php endif; ?>
 
-                <?php if (isset($error_message)): ?>
-                    <div class="alert alert-error"><?php echo $error_message; ?></div>
-                <?php endif; ?>
+                <form action="profile.php" method="POST" enctype="multipart/form-data" class="profile-form">
+                    <div class="profile-picture-upload">
+                        <img src="<?php echo !empty($profile_data['profile_picture']) ? $profile_data['profile_picture'] : '../../assets/images/default-avatar.png'; ?>" alt="Profile Picture" class="profile-preview">
+                        <input type="file" name="profile_picture" id="profile_picture" accept="image/jpeg,image/png,image/gif" class="file-input">
+                        <label for="profile_picture" class="file-label">
+                            <i class="fas fa-camera"></i> Change Picture
+                        </label>
+                    </div>
 
-                <form method="POST" action="" class="profile-form">
                     <div class="form-group">
                         <label for="first_name">First Name</label>
-                        <input type="text" id="first_name" name="first_name" 
-                               value="<?php echo htmlspecialchars($user_details['first_name']); ?>" required>
+                        <input type="text" name="first_name" id="first_name" value="<?php echo $profile_data['first_name']; ?>" required>
                     </div>
 
                     <div class="form-group">
                         <label for="last_name">Last Name</label>
-                        <input type="text" id="last_name" name="last_name" 
-                               value="<?php echo htmlspecialchars($user_details['last_name']); ?>" required>
+                        <input type="text" name="last_name" id="last_name" value="<?php echo $profile_data['last_name']; ?>" required>
                     </div>
 
                     <div class="form-group">
-                        <label for="email">Email Address</label>
-                        <input type="email" id="email" name="email" 
-                               value="<?php echo htmlspecialchars($user_details['email']); ?>" required>
+                        <label for="email">Email</label>
+                        <input type="email" name="email" id="email" value="<?php echo $profile_data['email']; ?>" readonly>
                     </div>
 
                     <div class="form-group">
-                        <label for="phone">Phone Number</label>
-                        <input type="tel" id="phone" name="phone" 
-                               value="<?php echo htmlspecialchars($user_details['phone_number'] ?? ''); ?>">
+                        <label for="phone_number">Phone Number</label>
+                        <input type="tel" name="phone_number" id="phone_number" value="<?php echo $profile_data['phone_number'] ?? ''; ?>">
                     </div>
 
-                    <div class="form-group full-width">
-                        <label for="role">Role</label>
-                        <input type="text" id="role" name="role" 
-                               value="<?php echo ucfirst(htmlspecialchars($user_details['role'])); ?>" readonly>
-                    </div>
+                    <?php if ($user_role === 'patient'): ?>
+                        <div class="form-group">
+                            <label for="date_of_birth">Date of Birth</label>
+                            <input type="date" name="date_of_birth" id="date_of_birth" value="<?php echo $profile_data['date_of_birth'] ?? ''; ?>">
+                        </div>
 
-                    <div class="form-group full-width">
-                        <button type="submit" class="submit-btn">Save Changes</button>
-                    </div>
-                </form>
+                        <div class="form-group">
+                            <label for="gender">Gender</label>
+                            <select name="gender" id="gender">
+                                <option value="male" <?php echo ($profile_data['gender'] ?? '') == 'male' ? 'selected' : ''; ?>>Male</option>
+                                <option value="female" <?php echo ($profile_data['gender'] ?? '') == 'female' ? 'selected' : ''; ?>>Female</option>
+                                <option value="other" <?php echo ($profile_data['gender'] ?? '') == 'other' ? 'selected' : ''; ?>>Other</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="cancer_type">Cancer Type</label>
+                            <input type="text" name="cancer_type" id="cancer_type" value="<?php echo $profile_data['cancer_type_name'] ?? 'Not Specified'; ?>" readonly>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="health_condition">Health Condition</label>
+                            <textarea name="health_condition" id="health_condition"><?php echo $profile_data['health_condition'] ?? ''; ?></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="symptoms">Symptoms</label>
+                            <textarea name="symptoms" id="symptoms"><?php echo $profile_data['symptoms'] ?? ''; ?></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="nutritional_plan">Nutritional Plan</label>
+                            <textarea name="nutritional_plan" id="nutritional_plan"><?php echo $profile_data['nutritional_plan'] ?? ''; ?></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="emotional_wellbeing">Emotional Wellbeing</label>
+                            <textarea name="emotional_wellbeing" id="emotional_wellbeing"><?php echo $profile_data['emotional_wellbeing'] ?? ''; ?></textarea>
+                        </div>
+                    <?php endif; ?>
+
+                    <?php if ($user_role === 'caregiver'): ?>
+                        <div class="form-group">
+                            <label for="specialization">Specialization</label>
+                            <input type="text" name="specialization" id="specialization" value="<?php echo $profile_data['specialization'] ?? ''; ?>">
+                        </div>
+                    <?php endif; ?>
+
+                    <button type="submit" class="btn-update-profile">Update Profile</button>
+                    </form>
             </div>
 
             <footer>
@@ -261,5 +360,24 @@ $conn->close();
             </footer>
         </main>
     </div>
+
+    <script>
+        // Profile picture preview
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInput = document.getElementById('profile_picture');
+            const imagePreview = document.querySelector('.profile-preview');
+
+            fileInput.addEventListener('change', function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        imagePreview.src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        });
+    </script>
 </body>
 </html>

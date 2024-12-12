@@ -98,6 +98,20 @@ $stmt->bind_param("ii", $user_id, $patient_id);
 $stmt->execute();
 $resource_story_stats = $stmt->get_result()->fetch_assoc();
 
+// Fetch user profile picture
+$profile_picture_sql = "SELECT profile_picture 
+                        FROM cancer_users 
+                        WHERE user_id = ?";
+$stmt = $conn->prepare($profile_picture_sql);
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+$user_profile = $result->fetch_assoc();
+
+// Use default image if no profile picture exists
+$profile_picture = $user_profile['profile_picture'] ?? '../assets/images/defaultuser.jpg';
+$stmt->close();
+
 $conn->close();
 ?>
 
@@ -115,18 +129,17 @@ $conn->close();
 <body>
     <div class="dashboard-container">
         <aside class="sidebar">
-            <div class="user-profile">
-                <img src="../../assets/images/mcnobert.jpg" alt="Patient Avatar" class="user-avatar">
-                <h3><span id="user-name"><?php echo $first_name . ' ' . $last_name; ?></span></h3>
-                <p><?php echo htmlspecialchars($patient_details['cancer_type_name'] ?? 'No Cancer Type'); ?></p>
+        <div class="user-profile">
+            <img src="../<?php echo htmlspecialchars($profile_picture); ?>" alt="Admin Avatar" class="user-avatar">
+                    <h3><span id="user-name"><?php echo $first_name . ' ' . $last_name; ?></span></h3>
             </div>
             <nav>
                 <ul>
                     <li><a href="patientdashboard.php" class="active"><i class="fas fa-home"></i> Dashboard</a></li>
-                    <li><a href="../appointments.php"><i class="fas fa-calendar-check"></i> My Appointments</a></li>
-                    <li><a href="../stories.php"><i class="fas fa-book-open"></i> Share My Story</a></li>
-                    <li><a href="../resources.php"><i class="fas fa-book-medical"></i> Share Resources</a></li>
-                    <li><a href="profile.php"><i class="fas fa-user"></i> My Profile</a></li>
+                    <li><a href="../stories.php"><i class="fas fa-book-open"></i> Stories</a></li>
+                    <li><a href="../resources.php"><i class="fas fa-book-medical"></i> Resources</a></li>
+                    <li><a href="../appointments.php"><i class="fas fa-calendar-check"></i> Appointments</a></li>
+                    <li><a href="../profile.php"><i class="fas fa-user"></i> Profile</a></li>
                     <li><a href="../../actions/logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
                 </ul>
             </nav>

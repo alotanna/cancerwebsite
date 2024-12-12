@@ -32,9 +32,9 @@
         <nav>
             <div class="nav-links">
                 <a href="index.php">Home</a>
-                <a href="#">Resources</a>
-                <a href="#">Community</a>
-                <a href="#">Support</a>
+                <a href="view/indexresources.php">Resources</a>
+                <a href="view/indexstories.php">Stories</a>
+                <a href="view/login.php">Support</a>
             </div>
             <div class="nav-auth">
                 <a href="view/login.php">Login</a>

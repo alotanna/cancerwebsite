@@ -16,9 +16,8 @@
             </div>
             <div class="nav-links">
                 <a href="../index.php">Home</a>
-                <a href="resources.html">Resources</a>
-                <a href="community.html">Community</a>
-                <a href="support.html">Support</a>
+                <a href="indexresources.html">Resources</a>
+                <a href="indexstories.html">Stories</a>
                 <a href="login.php">Login</a>
             </div>
         </nav>

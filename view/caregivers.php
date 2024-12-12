@@ -40,6 +40,21 @@ JOIN cancer_users u ON c.user_id = u.user_id
 ORDER BY u.created_at DESC";
 $result = $conn->query($sql);
 $caregivers = $result->fetch_all(MYSQLI_ASSOC);
+
+// Fetch user profile picture
+$profile_picture_sql = "SELECT profile_picture 
+                        FROM cancer_users 
+                        WHERE user_id = ?";
+$stmt = $conn->prepare($profile_picture_sql);
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+$user_profile = $result->fetch_assoc();
+
+// Use default image if no profile picture exists
+$profile_picture = $user_profile['profile_picture'] ?? '../assets/images/defaultuser.jpg';
+$stmt->close();
+
 ?>
 
 <!DOCTYPE html>
@@ -56,16 +71,16 @@ $caregivers = $result->fetch_all(MYSQLI_ASSOC);
 <body>
     <div class="dashboard-container">
         <aside class="sidebar">
-            <div class="user-profile">
-                <img src="../assets/images/austine.jpeg" alt="Admin Avatar" class="user-avatar">
-                <h3><span id="user-name"><?php echo $first_name . ' ' . $last_name; ?></span></h3>
-            </div>
+        <div class="user-profile">
+            <img src="<?php echo htmlspecialchars($profile_picture); ?>" alt="Admin Avatar" class="user-avatar">
+            <h3><span id="user-name"><?php echo $first_name . ' ' . $last_name; ?></span></h3>
+        </div>
             <nav>
                 <ul>
                     <li><a href="admin/dashboard.php"><i class="fas fa-home"></i> Dashboard</a></li>
                     <li><a href="caregivers.php" class="active"><i class="fas fa-user-nurse"></i> Caregivers</a></li>
                     <li><a href="patients.php"><i class="fas fa-users"></i> Patients & Survivors</a></li>
-                    <li><a href="stories.php"><i class="fas fa-book-open"></i> Stories Shared</a></li>
+                    <li><a href="stories.php"><i class="fas fa-book-open"></i> Stories</a></li>
                     <li><a href="resources.php"><i class="fas fa-book-medical"></i> Resources</a></li>
                     <li><a href="appointments.php"><i class="fas fa-calendar-check"></i> Appointments</a></li>
                     <li><a href="profile.php"><i class="fas fa-user"></i> Profile</a></li>
