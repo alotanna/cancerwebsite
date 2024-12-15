@@ -29,24 +29,19 @@ switch ($user_role) {
 
     case 'patient':
         // For patient, fetch from both users and patients tables
-        $sql = "SELECT cu.*, cp.* 
-                FROM cancer_users cu
-                JOIN cancer_patients cp ON cu.user_id = cp.user_id
-                WHERE cu.user_id = ?";
+        $sql = "SELECT cu.*, cp.*, ct.cancer_type_name 
+        FROM cancer_users cu
+        JOIN cancer_patients cp ON cu.user_id = cp.user_id
+        LEFT JOIN cancer_types ct ON cp.cancer_type_id = ct.cancer_type_id
+        WHERE cu.user_id = ?";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("i", $user_id);
         $stmt->execute();
         $profile_data = $stmt->get_result()->fetch_assoc();
-        
-        // Fetch cancer type if exists
-        if ($profile_data['cancer_type_id']) {
-            $cancer_type_sql = "SELECT cancer_type_name FROM cancer_types WHERE cancer_type_id = ?";
-            $cancer_stmt = $conn->prepare($cancer_type_sql);
-            $cancer_stmt->bind_param("i", $profile_data['cancer_type_id']);
-            $cancer_stmt->execute();
-            $cancer_result = $cancer_stmt->get_result()->fetch_assoc();
-            $profile_data['cancer_type_name'] = $cancer_result['cancer_type_name'] ?? 'Not Specified';
-        }
+
+        // Fetch all cancer types for dropdown
+        $cancer_types_query = "SELECT cancer_type_id, cancer_type_name FROM cancer_types ORDER BY cancer_type_name";
+        $cancer_types_result = $conn->query($cancer_types_query);
         break;
 
     case 'caregiver':
@@ -68,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $picture_path = $profile_data['profile_picture'] ?? '';
     
     if (!empty($_FILES['profile_picture']['name'])) {
-        $upload_dir = '../uploads/profile_pictures/';
+        $upload_dir = '../../uploads/';
         $allowed_types = ['image/jpeg', 'image/png', 'image/gif'];
         
         // Create upload directory if it doesn't exist
@@ -140,38 +135,34 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         case 'patient':
             // Update users table
             $user_update_sql = "UPDATE cancer_users SET 
-                    first_name = ?, 
-                    last_name = ?, 
-                    phone_number = ? 
-                    WHERE user_id = ?";
-            $user_stmt = $conn->prepare($user_update_sql);
-            $user_stmt->bind_param("sssi", 
-                $_POST['first_name'], 
-                $_POST['last_name'], 
-                $_POST['phone_number'], 
-                $user_id
-            );
-            $user_stmt->execute();
-
-            // Update patients table
-            $sql = "UPDATE cancer_patients SET 
-                    date_of_birth = ?, 
-                    gender = ?, 
-                    health_condition = ?, 
-                    symptoms = ?, 
-                    nutritional_plan = ?, 
-                    emotional_wellbeing = ?
-                    WHERE user_id = ?";
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param("ssssssi", 
-                $_POST['date_of_birth'], 
-                $_POST['gender'], 
-                $_POST['health_condition'], 
-                $_POST['symptoms'], 
-                $_POST['nutritional_plan'], 
-                $_POST['emotional_wellbeing'], 
-                $user_id
-            );
+            first_name = ?, 
+            last_name = ?, 
+            phone_number = ? 
+            WHERE user_id = ?";
+        $user_stmt = $conn->prepare($user_update_sql);
+        $user_stmt->bind_param("sssi", 
+            $_POST['first_name'], 
+            $_POST['last_name'], 
+            $_POST['phone_number'], 
+            $user_id
+        );
+        $user_stmt->execute();
+    
+        // Prepare update for patients table
+        $patient_update_sql = "UPDATE cancer_patients SET 
+            date_of_birth = ?, 
+            gender = ?, 
+            cancer_type_id = ?, 
+            immunotherapy_status = ?
+            WHERE user_id = ?";
+        $stmt = $conn->prepare($patient_update_sql);
+        $stmt->bind_param("ssssi", 
+            $_POST['date_of_birth'], 
+            $_POST['gender'], 
+            $_POST['cancer_type_id'], 
+            $_POST['immunotherapy_status'], 
+            $user_id
+        );
             break;
 
         case 'caregiver':
@@ -276,7 +267,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                 <form action="profile.php" method="POST" enctype="multipart/form-data" class="profile-form">
                     <div class="profile-picture-upload">
-                        <img src="<?php echo !empty($profile_data['profile_picture']) ? $profile_data['profile_picture'] : '../../assets/images/default-avatar.png'; ?>" alt="Profile Picture" class="profile-preview">
+                        <img src="<?php echo !empty($profile_data['profile_picture']) ? $profile_data['profile_picture'] : '../assets/images/defaultuser.jpg'; ?>" alt="Profile Picture" class="profile-preview">
                         <input type="file" name="profile_picture" id="profile_picture" accept="image/jpeg,image/png,image/gif" class="file-input">
                         <label for="profile_picture" class="file-label">
                             <i class="fas fa-camera"></i> Change Picture
@@ -319,29 +310,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         </div>
 
                         <div class="form-group">
-                            <label for="cancer_type">Cancer Type</label>
-                            <input type="text" name="cancer_type" id="cancer_type" value="<?php echo $profile_data['cancer_type_name'] ?? 'Not Specified'; ?>" readonly>
-                        </div>
-
+                        <label for="cancer_type_id">Cancer Type</label>
+                        <select name="cancer_type_id" id="cancer_type_id">
+                            <option value="">Select Cancer Type</option>
+                            <?php 
+                            while ($cancer_type = $cancer_types_result->fetch_assoc()): ?>
+                                <option value="<?php echo $cancer_type['cancer_type_id']; ?>" 
+                                    <?php echo ($profile_data['cancer_type_id'] == $cancer_type['cancer_type_id']) ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($cancer_type['cancer_type_name']); ?>
+                                </option>
+                            <?php endwhile; ?>
+                        </select>
+                    </div>
                         <div class="form-group">
-                            <label for="health_condition">Health Condition</label>
-                            <textarea name="health_condition" id="health_condition"><?php echo $profile_data['health_condition'] ?? ''; ?></textarea>
-                        </div>
+                        <label for="immunotherapy_status">Immunotherapy Status</label>
+                        <select name="immunotherapy_status" id="immunotherapy_status">
+                            <option value="not_started" <?php echo ($profile_data['immunotherapy_status'] ?? '') == 'not_started' ? 'selected' : ''; ?>>Not Started</option>
+                            <option value="ongoing" <?php echo ($profile_data['immunotherapy_status'] ?? '') == 'ongoing' ? 'selected' : ''; ?>>Ongoing</option>
+                            <option value="completed" <?php echo ($profile_data['immunotherapy_status'] ?? '') == 'completed' ? 'selected' : ''; ?>>Completed</option>
+                            <option value="discontinued" <?php echo ($profile_data['immunotherapy_status'] ?? '') == 'discontinued' ? 'selected' : ''; ?>>Discontinued</option>
+                        </select>
+                    </div>
 
-                        <div class="form-group">
-                            <label for="symptoms">Symptoms</label>
-                            <textarea name="symptoms" id="symptoms"><?php echo $profile_data['symptoms'] ?? ''; ?></textarea>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="nutritional_plan">Nutritional Plan</label>
-                            <textarea name="nutritional_plan" id="nutritional_plan"><?php echo $profile_data['nutritional_plan'] ?? ''; ?></textarea>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="emotional_wellbeing">Emotional Wellbeing</label>
-                            <textarea name="emotional_wellbeing" id="emotional_wellbeing"><?php echo $profile_data['emotional_wellbeing'] ?? ''; ?></textarea>
-                        </div>
                     <?php endif; ?>
 
                     <?php if ($user_role === 'caregiver'): ?>

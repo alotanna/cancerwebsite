@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Handle picture upload
     $picture_path = null;
     if (!empty($_FILES['picture']['name'])) {
-        $upload_dir = '../uploads/stories/';
+        $upload_dir = '../../uploads/';
         
         // Create directory if it doesn't exist
         if (!file_exists($upload_dir)) {
@@ -71,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         // Move uploaded file
         if (empty($errors) && move_uploaded_file($_FILES['picture']['tmp_name'], $target_path)) {
-            $picture_path = '../uploads/stories/' . $filename;
+            $picture_path = '../../uploads/' . $filename;
         } else {
             $errors[] = "Failed to upload picture.";
         }

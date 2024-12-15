@@ -35,7 +35,7 @@ $sql = "SELECT
     u.phone_number,
     ct.cancer_type_name,
     p.gender,
-    p.treatment_status,
+    p.immunotherapy_status,
     p.created_at
 FROM cancer_patients p
 JOIN cancer_users u ON p.user_id = u.user_id
@@ -62,7 +62,6 @@ $user_profile = $result->fetch_assoc();
 // Use default image if no profile picture exists
 $profile_picture = $user_profile['profile_picture'] ?? '../assets/images/defaultuser.jpg';
 $stmt->close();
-
 ?>
 
 <!DOCTYPE html>
@@ -114,7 +113,7 @@ $stmt->close();
                             <th>Phone</th>
                             <th>Cancer Type</th>
                             <th>Gender</th>
-                            <th>Treatment Status</th>
+                            <th>Immunotherapy Status</th>
                             <th>Joined Date</th>
                             <th>Actions</th>
                         </tr>
@@ -127,7 +126,7 @@ $stmt->close();
                                 <td><?php echo htmlspecialchars($patient['phone_number'] ?? 'N/A'); ?></td>
                                 <td><?php echo htmlspecialchars($patient['cancer_type_name'] ?? 'Unspecified'); ?></td>
                                 <td><?php echo htmlspecialchars(ucfirst($patient['gender'])); ?></td>
-                                <td><?php echo htmlspecialchars(str_replace('_', ' ', ucwords($patient['treatment_status']))); ?></td>
+                                <td><?php echo htmlspecialchars(str_replace('_', ' ', ucwords($patient['immunotherapy_status']))); ?></td>
                                 <td><?php echo date('M d, Y', strtotime($patient['created_at'])); ?></td>
                                 <td class="action-buttons">
                                     <button onclick="viewPatientDetails(<?php echo $patient['patient_id']; ?>)" class="view-btn">
@@ -176,6 +175,10 @@ $stmt->close();
                 </div>
                 <div class="form-row">
                     <div class="form-group">
+                        <label for="date_of_birth">Date of Birth</label>
+                        <input type="date" id="date_of_birth" name="date_of_birth">
+                    </div>
+                    <div class="form-group">
                         <label for="gender">Gender</label>
                         <select id="gender" name="gender" required>
                             <option value="male">Male</option>
@@ -183,6 +186,8 @@ $stmt->close();
                             <option value="other">Other</option>
                         </select>
                     </div>
+                </div>
+                <div class="form-row">
                     <div class="form-group">
                         <label for="cancer_type_id">Cancer Type</label>
                         <select id="cancer_type_id" name="cancer_type_id">
@@ -194,16 +199,15 @@ $stmt->close();
                             <?php endforeach; ?>
                         </select>
                     </div>
-                </div>
-                <div class="form-group">
-                    <label for="treatment_status">Treatment Status</label>
-                    <select id="treatment_status" name="treatment_status" required>
-                        <option value="initial_diagnosis">Initial Diagnosis</option>
-                        <option value="in_treatment">In Treatment</option>
-                        <option value="post_treatment">Post Treatment</option>
-                        <option value="remission">Remission</option>
-                        <option value="palliative_care">Palliative Care</option>
-                    </select>
+                    <div class="form-group">
+                        <label for="immunotherapy_status">Immunotherapy Status</label>
+                        <select id="immunotherapy_status" name="immunotherapy_status" required>
+                            <option value="not_started">Not Started</option>
+                            <option value="ongoing">Ongoing</option>
+                            <option value="completed">Completed</option>
+                            <option value="discontinued">Discontinued</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="form-actions">
                     <button type="button" class="cancel-btn" onclick="closeAddPatientModal()">Cancel</button>
@@ -212,8 +216,6 @@ $stmt->close();
             </form>
         </div>
     </div>
-
-    <!-- Modals for View and Edit would be similar -->
 
     <script>
         // Modal Functions

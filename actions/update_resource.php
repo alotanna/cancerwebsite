@@ -70,7 +70,7 @@ if (empty($title) || empty($content)) {
 // Handle file upload
 $picture_path = $_POST['current_picture'];
 if (!empty($_FILES['picture']['name'])) {
-    $upload_dir = '../uploads/resource_images/';
+    $upload_dir = '../../uploads/';
     $allowed_types = ['image/jpeg', 'image/png', 'image/gif'];
     
     // Create upload directory if it doesn't exist

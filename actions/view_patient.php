@@ -25,19 +25,12 @@ $sql = "SELECT
     u.last_name, 
     u.email, 
     u.phone_number,
+    u.profile_picture,
     ct.cancer_type_name,
-    p.gender,
     p.date_of_birth,
-    p.health_condition,
-    p.treatment_status,
-    p.symptoms,
-    p.nutritional_plan,
-    p.medications,
-    p.emotional_wellbeing,
-    p.caregiver_info,
-    p.immunotherapy_status,
-    p.created_at,
-    p.updated_at
+    p.gender,
+    p.cancer_type_id,
+    p.immunotherapy_status
 FROM cancer_patients p
 JOIN cancer_users u ON p.user_id = u.user_id
 LEFT JOIN cancer_types ct ON p.cancer_type_id = ct.cancer_type_id
@@ -84,6 +77,13 @@ $stmt->close();
             <div class="patient-details-container">
                 <div class="patient-info-card">
                     <h3>Personal Information</h3>
+                    <div class="story-image-container">
+                        <?php if (!empty($patient['profile_picture'])): ?>
+                            <img src="<?php echo htmlspecialchars($patient['profile_picture']); ?>" alt="Profile Picture">
+                        <?php else: ?>
+                            <img src="../assets/images/defaultuser.jpg" alt="Default Profile Picture">
+                        <?php endif; ?>
+                    </div>
                     <div class="info-grid">
                         <div class="info-item">
                             <label>Full Name</label>
@@ -116,31 +116,8 @@ $stmt->close();
                             <p><?php echo htmlspecialchars($patient['cancer_type_name'] ?? 'Unspecified'); ?></p>
                         </div>
                         <div class="info-item">
-                            <label>Treatment Status</label>
-                            <p><?php echo htmlspecialchars(str_replace('_', ' ', ucwords($patient['treatment_status']))); ?></p>
-                        </div>
-                        <div class="info-item">
                             <label>Immunotherapy Status</label>
                             <p><?php echo htmlspecialchars(str_replace('_', ' ', ucwords($patient['immunotherapy_status'] ?? 'Not Available'))); ?></p>
-                        </div>
-                    </div>
-                    
-                    <div class="medical-details">
-                        <div class="info-item full-width">
-                            <label>Health Condition</label>
-                            <p><?php echo htmlspecialchars($patient['health_condition'] ?? 'No details available'); ?></p>
-                        </div>
-                        <div class="info-item full-width">
-                            <label>Symptoms</label>
-                            <p><?php echo htmlspecialchars($patient['symptoms'] ?? 'No symptoms recorded'); ?></p>
-                        </div>
-                        <div class="info-item full-width">
-                            <label>Nutritional Plan</label>
-                            <p><?php echo htmlspecialchars($patient['nutritional_plan'] ?? 'No nutritional plan available'); ?></p>
-                        </div>
-                        <div class="info-item full-width">
-                            <label>Medications</label>
-                            <p><?php echo htmlspecialchars($patient['medications'] ?? 'No medications recorded'); ?></p>
                         </div>
                     </div>
                 </div>

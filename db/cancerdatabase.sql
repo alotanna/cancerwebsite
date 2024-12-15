@@ -23,7 +23,6 @@ CREATE TABLE cancer_users (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Create Combined Patients Table with Comprehensive Information
 CREATE TABLE cancer_patients (
     patient_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL UNIQUE,
@@ -31,17 +30,10 @@ CREATE TABLE cancer_patients (
     gender ENUM('male', 'female', 'other') NOT NULL,
     cancer_type_id INT,
     
-    health_condition VARCHAR(255),
-    treatment_status ENUM('initial_diagnosis', 'in_treatment', 'post_treatment', 'remission', 'palliative_care'),
-    symptoms TEXT,
-    nutritional_plan TEXT,
-    medications TEXT,
-    emotional_wellbeing TEXT,
-    caregiver_info TEXT,
-    immunotherapy_status ENUM('not_started', 'ongoing', 'completed', 'discontinued'),
-    
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    immunotherapy_status ENUM('not_started', 'ongoing', 'completed', 'discontinued'),
     
     FOREIGN KEY (user_id) REFERENCES cancer_users(user_id) ON DELETE CASCADE,
     FOREIGN KEY (cancer_type_id) REFERENCES cancer_types(cancer_type_id) ON DELETE SET NULL

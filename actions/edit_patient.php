@@ -33,13 +33,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $gender = $_POST['gender'] ?? '';
     $date_of_birth = $_POST['date_of_birth'] ?? null;
     $cancer_type_id = $_POST['cancer_type_id'] ?? null;
-    $treatment_status = $_POST['treatment_status'] ?? '';
-    $health_condition = $_POST['health_condition'] ?? '';
-    $symptoms = $_POST['symptoms'] ?? '';
-    $nutritional_plan = $_POST['nutritional_plan'] ?? '';
-    $medications = $_POST['medications'] ?? '';
-    $emotional_wellbeing = $_POST['emotional_wellbeing'] ?? '';
-    $caregiver_info = $_POST['caregiver_info'] ?? '';
     $immunotherapy_status = $_POST['immunotherapy_status'] ?? '';
 
     // Begin transaction
@@ -57,17 +50,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Update patient details
         $patient_update_sql = "UPDATE cancer_patients 
-                                SET gender = ?, date_of_birth = ?, cancer_type_id = ?, 
-                                    treatment_status = ?, health_condition = ?, 
-                                    symptoms = ?, nutritional_plan = ?, 
-                                    medications = ?, emotional_wellbeing = ?, 
-                                    caregiver_info = ?, immunotherapy_status = ?
+                                SET gender = ?, date_of_birth = ?, cancer_type_id = ?,  immunotherapy_status = ?
                                 WHERE patient_id = ?";
         $patient_stmt = $conn->prepare($patient_update_sql);
-        $patient_stmt->bind_param("sssssssssssi", 
-            $gender, $date_of_birth, $cancer_type_id, $treatment_status, 
-            $health_condition, $symptoms, $nutritional_plan, 
-            $medications, $emotional_wellbeing, $caregiver_info, 
+        $patient_stmt->bind_param("ssssi", 
+            $gender, $date_of_birth, $cancer_type_id, 
             $immunotherapy_status, $patient_id
         );
         $patient_stmt->execute();
@@ -98,13 +85,6 @@ $sql = "SELECT
     p.gender,
     p.date_of_birth,
     p.cancer_type_id,
-    p.treatment_status,
-    p.health_condition,
-    p.symptoms,
-    p.nutritional_plan,
-    p.medications,
-    p.emotional_wellbeing,
-    p.caregiver_info,
     p.immunotherapy_status
 FROM cancer_patients p
 JOIN cancer_users u ON p.user_id = u.user_id
@@ -205,18 +185,6 @@ $patient = $result->fetch_assoc();
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="treatment_status">Treatment Status</label>
-                                <select id="treatment_status" name="treatment_status" required>
-                                    <option value="initial_diagnosis" <?php echo $patient['treatment_status'] === 'initial_diagnosis' ? 'selected' : ''; ?>>Initial Diagnosis</option>
-                                    <option value="in_treatment" <?php echo $patient['treatment_status'] === 'in_treatment' ? 'selected' : ''; ?>>In Treatment</option>
-                                    <option value="post_treatment" <?php echo $patient['treatment_status'] === 'post_treatment' ? 'selected' : ''; ?>>Post Treatment</option>
-                                    <option value="remission" <?php echo $patient['treatment_status'] === 'remission' ? 'selected' : ''; ?>>Remission</option>
-                                    <option value="palliative_care" <?php echo $patient['treatment_status'] === 'palliative_care' ? 'selected' : ''; ?>>Palliative Care</option>
-                                </select>
-                            </div>
-                        </div>
 
                         <div class="form-group">
                             <label for="immunotherapy_status">Immunotherapy Status</label>
@@ -227,37 +195,6 @@ $patient = $result->fetch_assoc();
                                 <option value="discontinued" <?php echo $patient['immunotherapy_status'] === 'discontinued' ? 'selected' : ''; ?>>Discontinued</option>
                             </select>
                         </div>
-
-                        <div class="form-group">
-                            <label for="health_condition">Health Condition</label>
-                            <textarea id="health_condition" name="health_condition" rows="3"><?php echo htmlspecialchars($patient['health_condition'] ?? ''); ?></textarea>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="symptoms">Symptoms</label>
-                            <textarea id="symptoms" name="symptoms" rows="3"><?php echo htmlspecialchars($patient['symptoms'] ?? ''); ?></textarea>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="nutritional_plan">Nutritional Plan</label>
-                            <textarea id="nutritional_plan" name="nutritional_plan" rows="3"><?php echo htmlspecialchars($patient['nutritional_plan'] ?? ''); ?></textarea>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="medications">Medications</label>
-                            <textarea id="medications" name="medications" rows="3"><?php echo htmlspecialchars($patient['medications'] ?? ''); ?></textarea>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="emotional_wellbeing">Emotional Wellbeing</label>
-                            <textarea id="emotional_wellbeing" name="emotional_wellbeing" rows="3"><?php echo htmlspecialchars($patient['emotional_wellbeing'] ?? ''); ?></textarea>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="caregiver_info">Caregiver Information</label>
-                            <textarea id="caregiver_info" name="caregiver_info" rows="3"><?php echo htmlspecialchars($patient['caregiver_info'] ?? ''); ?></textarea>
-                        </div>
-                    </div>
 
                     <div class="form-actions">
                         <a href="../view/patients.php" class="cancel-btn">Cancel</a>

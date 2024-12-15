@@ -38,6 +38,7 @@ if ($conn->query($update_sql) === TRUE) {
     // Set success message in session
     $_SESSION['message'] = "Story status updated successfully.";
     $_SESSION['message_type'] = "success";
+    
 } else {
     // Set error message in session
     $_SESSION['message'] = "Error updating story status: " . $conn->error;
