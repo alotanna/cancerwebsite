@@ -312,7 +312,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         <div class="form-group">
                         <label for="cancer_type_id">Cancer Type</label>
                         <select name="cancer_type_id" id="cancer_type_id">
-                            <option value="">Select Cancer Type</option>
+                            <option value= 4 >Select a cancer type</option>
                             <?php 
                             while ($cancer_type = $cancer_types_result->fetch_assoc()): ?>
                                 <option value="<?php echo $cancer_type['cancer_type_id']; ?>" 
