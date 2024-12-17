@@ -17,7 +17,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $phone_number = !empty($_POST['phone_number']) ? $conn->real_escape_string(trim($_POST['phone_number'])) : NULL;
     $specialization = !empty($_POST['specialization']) ? $conn->real_escape_string(trim($_POST['specialization'])) : NULL;
     
-    // TODO: Add password generation/hashing logic
     $default_password = password_hash('Maureen123*', PASSWORD_DEFAULT);
 
     // Begin transaction
@@ -64,13 +63,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
         // Commit transaction
         $conn->commit();
-        
-        // Redirect with success message
         $_SESSION['success_message'] = "Caregiver added successfully!";
         header("Location: ../view/caregivers.php");
         exit();
     } catch (Exception $e) {
-        // Rollback transaction
+
         $conn->rollback();
         
         // Redirect with error message
@@ -79,7 +76,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit();
     }
 } else {
-    // If accessed directly without POST
     header("Location: ../view/caregivers.php");
     exit();
 }
