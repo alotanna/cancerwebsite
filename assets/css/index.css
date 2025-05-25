@@ -7,6 +7,7 @@
     --dark-lavender: #9796b0;
     --text-primary: #FFFFFF;
     --text-secondary: #6B6B6B;
+    --text-dark: #000;
     --white: #FFFFFF;
 }
 
@@ -105,10 +106,15 @@
     letter-spacing: 1px;
 }
 
+.nav-logo span {
+    color: var(--text-dark);
+}
+
 .nav-logo i {
     color: var(--soft-pink);
     font-size: 2.2rem;
 }
+
 
 nav {
     display: flex;
@@ -126,6 +132,7 @@ nav {
     gap: 15px;
     margin-left: auto;
 }
+
 
 nav a {
     text-decoration: none;
