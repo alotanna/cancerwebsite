@@ -65,7 +65,7 @@
                 <h2>About HealingCells</h2>
                 <p>HealingCells is a supportive platform bringing together cancer patients, survivors, caregivers, and healthcare professionals. We believe in empowering individuals through every stage of their cancer journey.</p>
                 <p>Our community provides emotional support, practical resources, and expert guidance to help you navigate your path to healing with confidence and hope.</p>
-                <a href="#" class="secondary-button">Learn More</a>
+              <!--  <a href="#" class="secondary-button">Learn More</a>-->
             </div>
         </div>
     </section>
