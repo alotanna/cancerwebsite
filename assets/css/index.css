@@ -570,15 +570,17 @@ nav a:hover::after {
     align-items: center;
     justify-content: center;
     transition: all 0.3s;
+    text-decoration: none; /* This removes the underline */
 }
 
 .footer-social a:hover {
-    background: rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.4);
     transform: translateY(-3px);
 }
 
 .footer-social i {
     font-size: 1.2rem;
+    color:#FFFFFF
 }
 
 .footer-bottom {
