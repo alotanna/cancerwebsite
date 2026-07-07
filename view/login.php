@@ -89,6 +89,7 @@
                         <p>New to our community?</p>
                         <a href="signup.php" class="register-link">Join Us</a>
                     </div>
+                </form>
 
                 <div class="help-section">
                     <p>Need assistance? <a href="contact.html">Contact Support</a></p>

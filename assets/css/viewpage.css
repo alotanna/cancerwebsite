@@ -11,9 +11,10 @@
 .patient-info-card,
 .patient-medical-card {
     background: var(--card-bg);
-    border-radius: 15px;
+    border-radius: 22px;
     padding: 1.5rem;
     box-shadow: var(--shadow-subtle);
+    border: 1px solid rgba(34, 48, 65, 0.08);
 }
 
 .info-grid {
@@ -47,7 +48,7 @@
 .story-image-container {
     width: 100%;
     max-height: 500px;
-    border-radius: 15px;
+    border-radius: 22px;
     overflow: hidden;
     margin-bottom: 1.5rem;
     box-shadow: var(--shadow-subtle);
@@ -66,8 +67,8 @@
 }
 
 .story-content {
-    background-color: var(--background-light);
-    border-radius: 10px;
+    background: linear-gradient(135deg, #fff8fb 0%, #fff1f6 100%);
+    border-radius: 16px;
     padding: 1.5rem;
     line-height: 1.6;
 }
@@ -87,7 +88,7 @@
 .btn {
     text-decoration: none;
     padding: 0.75rem 1.5rem;
-    border-radius: 8px;
+    border-radius: 999px;
     display: inline-flex;
     align-items: center;
     gap: 10px;
@@ -96,22 +97,22 @@
 }
 
 .btn-approve {
-    background-color: #4CAF50;
+    background: linear-gradient(135deg, #2d9c78 0%, #55c18f 100%);
     color: white;
 }
 
 .btn-reject {
-    background-color: #f44336;
+    background: linear-gradient(135deg, #d6455d 0%, #ef7b8d 100%);
     color: white;
 }
 
 .btn-edit {
-    background-color: #2196F3;
+    background: linear-gradient(135deg, #4c7bd9 0%, #76a0ef 100%);
     color: white;
 }
 
 .btn-delete {
-    background-color: #ff5722;
+    background: linear-gradient(135deg, #e06634 0%, #f39b65 100%);
     color: white;
 }
 

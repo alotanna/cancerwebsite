@@ -47,12 +47,29 @@
     <!-- Hero Section -->
     <section class="hero">
         <div class="hero-content">
-            <h1>Your Journey. Our Support.</h1>
-            <p>Join a community dedicated to supporting every step of your cancer journey with care, understanding, and hope.</p>
-            <a href="view/login.php" class="cta-button">Get Support Now</a>
+            <span class="hero-badge">Compassionate support for every stage of the journey</span>
+            <h1>Your journey deserves calm, modern care.</h1>
+            <p>HealingCells brings together guidance, resources, and a supportive community so patients, survivors, and caregivers feel less alone.</p>
+            <div class="hero-actions">
+                <a href="view/login.php" class="cta-button">Get Support Now</a>
+                <a href="view/indexresources.php" class="cta-button secondary-button">Explore Resources</a>
+            </div>
+            <div class="hero-stats" aria-label="HealingCells highlights">
+                <div class="hero-stat">
+                    <strong>24/7</strong>
+                    <span>support access</span>
+                </div>
+                <div class="hero-stat">
+                    <strong>Expert</strong>
+                    <span>guided resources</span>
+                </div>
+                <div class="hero-stat">
+                    <strong>Real</strong>
+                    <span>survivor stories</span>
+                </div>
+            </div>
         </div>
-        <!--div for the slider controls -->
-        <div class="slider-controls"></div>
+        <div class="slider-controls" aria-label="Hero slide controls"></div>
     </section>
 
     <!-- About Us Section -->

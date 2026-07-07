@@ -1,8 +1,16 @@
 /* Patients Page Specific Styles */
+.welcome-container,
+.patients-table-container,
+.modal-content {
+    border: 1px solid rgba(34, 48, 65, 0.08);
+}
+
 .welcome-container {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 16px;
+    background: linear-gradient(135deg, #ffffff 0%, #fff1f6 100%);
 }
 
 .add-new-btn {
@@ -10,11 +18,12 @@
     color: white;
     text-decoration: none;
     padding: 0.75rem 1.5rem;
-    border-radius: 8px;
+    border-radius: 999px;
     display: flex;
     align-items: center;
     gap: 10px;
     transition: all 0.3s ease;
+    box-shadow: var(--shadow-elevated);
 }
 
 .add-new-btn:hover {
@@ -24,9 +33,10 @@
 
 .patients-table-container {
     background: var(--card-bg);
-    border-radius: 15px;
+    border-radius: 20px;
     padding: 1.5rem;
     box-shadow: var(--shadow-subtle);
+    overflow: hidden;
 }
 
 .patients-table {
@@ -36,23 +46,28 @@
 }
 
 .patients-table thead {
-    background-color: var(--background-light);
+    background: linear-gradient(135deg, #fff1f5 0%, #ffe7ef 100%);
 }
 
 .patients-table th {
     padding: 1rem;
     text-align: left;
-    color: var(--text-secondary);
+    color: var(--secondary-color);
     font-weight: 600;
     text-transform: uppercase;
     font-size: 0.8rem;
+    letter-spacing: 0.04em;
 }
 
 .patients-table td {
     padding: 1rem;
     background-color: white;
-    border-bottom: 1px solid var(--background-light);
+    border-bottom: 1px solid rgba(217, 79, 130, 0.08);
     color: var(--text-primary);
+}
+
+.patients-table tbody tr:nth-child(even) td {
+    background: #fff8fa;
 }
 
 .action-buttons {
@@ -62,27 +77,28 @@
 
 .action-buttons button {
     background: none;
-    border: none;
+    border: 1px solid rgba(34, 48, 65, 0.08);
     cursor: pointer;
     padding: 0.5rem;
-    border-radius: 5px;
+    border-radius: 10px;
     transition: all 0.3s ease;
+    background-color: #fff;
 }
 
 .view-btn {
-    color: var(--secondary-color);
+    color: var(--primary-color);
 }
 
 .edit-btn {
-    color: #4CAF50;
+    color: #2d9c78;
 }
 
 .delete-btn {
-    color: #f44336;
+    color: #d6455d;
 }
 
 .action-buttons button:hover {
-    background-color: rgba(0,0,0,0.05);
+    background-color: #fff1f5;
     transform: scale(1.1);
 }
 
@@ -96,14 +112,14 @@
     width: 100%;
     height: 100%;
     overflow: auto;
-    background-color: rgba(0,0,0,0.4);
+    background-color: rgba(20, 32, 51, 0.45);
 }
 
 .modal-content {
     background-color: var(--card-bg);
     margin: 10% auto;
     padding: 2rem;
-    border-radius: 15px;
+    border-radius: 22px;
     width: 80%;
     max-width: 600px;
     box-shadow: var(--shadow-elevated);
@@ -132,14 +148,16 @@
 .form-group label {
     margin-bottom: 0.5rem;
     color: var(--text-secondary);
+    font-weight: 600;
 }
 
 .form-group input,
 .form-group select {
-    padding: 0.75rem;
-    border: 1px solid var(--background-light);
-    border-radius: 8px;
+    padding: 0.85rem 0.95rem;
+    border: 1px solid rgba(34, 48, 65, 0.12);
+    border-radius: 12px;
     font-size: 1rem;
+    background: #fff;
 }
 
 .form-actions {
@@ -160,7 +178,7 @@
 }
 
 .cancel-btn {
-    background-color: var(--background-light);
+    background-color: #fff1f5;
     color: var(--text-secondary);
 }
 
@@ -170,7 +188,7 @@
 }
 
 .cancel-btn:hover {
-    background-color: #e0e0e0;
+    background-color: #ffe3ec;
 }
 
 .submit-btn:hover {

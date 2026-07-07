@@ -96,7 +96,7 @@ $stmt->close();
                         <li><a href="admin/caregiversdashboard.php"><i class="fas fa-home"></i> Dashboard</a></li>
                     <?php endif; ?>
                     <?php if ($user_role !== 'caregiver'): ?>
-                        <li><a href="stories.php"><i class="fas fa-book-open"></i> Stories</a></li>
+                        <li><a href="stories.php" class="active"><i class="fas fa-book-open"></i> Stories</a></li>
                     <?php endif; ?>
                     <li><a href="resources.php"><i class="fas fa-book-medical"></i> Resources</a></li>
                     <li><a href="appointments.php"><i class="fas fa-calendar-check"></i> Appointments</a></li>

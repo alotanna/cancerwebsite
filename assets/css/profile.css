@@ -1,11 +1,12 @@
 /* Profile Page Specific Styles */
 .profile-container {
     background: var(--card-bg);
-    border-radius: 15px;
+    border-radius: 22px;
     padding: 2rem;
     box-shadow: var(--shadow-subtle);
     max-width: 800px;
     margin: 0 auto;
+    border: 1px solid rgba(34, 48, 65, 0.08);
 }
 
 .profile-container h2 {
@@ -31,7 +32,7 @@
     height: 200px;
     border-radius: 50%;
     object-fit: cover;
-    border: 4px solid var(--primary-color);
+    border: 4px solid rgba(217, 79, 130, 0.18);
     margin-bottom: 1rem;
 }
 
@@ -40,8 +41,8 @@
 }
 
 .file-label {
-    background: var(--gradient-primary);
-    color: white;
+    background: var(--gradient-secondary);
+    color: #ffffff;
     padding: 0.75rem 1.5rem;
     border-radius: 25px;
     cursor: pointer;
@@ -49,6 +50,8 @@
     align-items: center;
     gap: 0.5rem;
     transition: transform 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: var(--shadow-subtle);
 }
 
 .file-label:hover {
@@ -70,9 +73,9 @@
 .form-group select, 
 .form-group textarea {
     padding: 0.75rem;
-    border: 1px solid var(--background-light);
+    border: 1px solid rgba(34, 48, 65, 0.12);
     border-radius: 8px;
-    background-color: var(--background-light);
+    background-color: #fff;
     transition: all 0.3s ease;
 }
 
@@ -81,12 +84,12 @@
 .form-group textarea:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 2px rgba(199, 75, 102, 0.2);
+    box-shadow: 0 0 0 3px rgba(217, 79, 130, 0.12);
 }
 
 .btn-update-profile {
-    background: var(--gradient-primary);
-    color: white;
+    background: var(--gradient-secondary);
+    color: #ffffff;
     border: none;
     padding: 1rem;
     border-radius: 25px;
@@ -94,6 +97,8 @@
     cursor: pointer;
     transition: transform 0.3s ease;
     margin-top: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: var(--shadow-elevated);
 }
 
 .btn-update-profile:hover {
@@ -108,15 +113,15 @@
 }
 
 .alert-success {
-    background-color: #dff0d8;
-    color: #3c763d;
-    border: 1px solid #d6e9c6;
+    background-color: #f4fff7;
+    color: #276748;
+    border: 1px solid rgba(39, 103, 72, 0.16);
 }
 
 .alert-error {
-    background-color: #f2dede;
-    color: #a94442;
-    border: 1px solid #ebccd1;
+    background-color: #fff5f7;
+    color: #9a324e;
+    border: 1px solid rgba(154, 50, 78, 0.16);
 }
 
 /* Responsive Adjustments */
