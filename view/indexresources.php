@@ -203,50 +203,7 @@ $conn->close();
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-main">
-                    <div class="footer-brand">
-                        <h3>HealingCells</h3>
-                        <p>A supportive community dedicated to empowering cancer patients, survivors, and caregivers. Together, we create a space of hope, strength, and healing.</p>
-                        <div class="footer-social">
-                            <a href="#"><i class='bx bxl-instagram'></i></a>
-                            <a href="#"><i class='bx bxl-twitter'></i></a>
-                            <a href="#"><i class='bx bxl-facebook'></i></a>
-                            <a href="#"><i class='bx bxl-youtube'></i></a>
-                        </div>
-                    </div>
-                    
-                    <div class="footer-links">
-                        <div class="footer-section">
-                            <h3>Quick Links</h3>
-                            <ul>
-                                <li><a href="#">Resources</a></li>
-                                <li><a href="#">Support Groups</a></li>
-                                <li><a href="#">Contact Help</a></li>
-                                <li><a href="#">Emergency Support</a></li>
-                            </ul>
-                        </div>
-                        
-                        <div class="footer-section">
-                            <h3>Contact Us</h3>
-                            <ul>
-                                <li><a href="#">📍 26 God shall save us, Ndimmm Imi state</a></li>
-                                <li><a href="tel:2348903900342">📞 24/7 Helpline: (234) 890 5662 342</a></li>
-                                <li><a href="mailto:support@healingcells.com">✉️ support@healingcells.com</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="footer-bottom">
-                    <p>2024 HealingCells. All rights reserved by Austine Omo Naija.</p>
-                </div>
-            </div>
-        </div>
-    </footer>
+    <?php include '../includes/footer.php'; ?>
 
     <script>
     document.addEventListener('DOMContentLoaded', function() {
